@@ -1,0 +1,35 @@
+name: Daily library availability crawl
+
+on:
+  schedule:
+    # 06:00 in Brussels time. GitHub Actions cron is UTC, so this is
+    # 04:00 UTC in summer (CEST) and 05:00 UTC in winter (CET) -
+    # 05:00 UTC is a safe, simple middle ground year-round.
+    - cron: "0 5 * * *"
+  workflow_dispatch: {} # lets you trigger a run manually from the Actions tab
+
+permissions:
+  contents: write
+
+jobs:
+  crawl:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Run crawler
+        env:
+          AVAILABILITY_URL: ${{ secrets.AVAILABILITY_URL }}
+        run: python crawl.py
+
+      - name: Commit updated data
+        run: |
+          git config user.name "library-tracker-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add docs/data/history.jsonl docs/data/latest.json
+          git diff --staged --quiet || git commit -m "Daily snapshot $(date -u +%F)"
+          git push

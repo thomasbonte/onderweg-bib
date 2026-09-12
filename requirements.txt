@@ -1,0 +1,4 @@
+# crawl.py only uses the Python standard library (urllib, xml.etree),
+# so there's nothing to install today. This file is kept so the
+# GitHub Actions workflow has something to point at if you add
+# dependencies later (e.g. `requests`, `lxml`).

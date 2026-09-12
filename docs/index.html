@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Library availability tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,500;0,600;0,700;1,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+<style>
+  :root{
+    --parchment: #E9E0C7;
+    --parchment-light: #F2ECDA;
+    --cover-green: #1F3D2E;
+    --cover-green-light: #2C5240;
+    --ink: #241F16;
+    --ink-soft: #4B4536;
+    --brass: #A97E3D;
+    --stamp-red: #9B3B2E;
+    --available: #3F7A57;
+    --card-line: #C9BB9A;
+    --line-strong: #8E8262;
+  }
+  *{ box-sizing: border-box; }
+  body{
+    margin:0;
+    background: var(--parchment);
+    color: var(--ink);
+    font-family: 'Inter', sans-serif;
+    font-variant-numeric: tabular-nums;
+  }
+  h1,h2,h3, .stamp-number{ font-family:'Lora', serif; margin:0; }
+  a{ color: var(--cover-green); }
+
+  .drawer-label{
+    background: var(--cover-green);
+    color: var(--parchment-light);
+    padding: 22px clamp(16px,4vw,48px);
+    border-bottom: 4px solid var(--brass);
+  }
+  .drawer-label .kicker{
+    font-size: 0.8rem;
+    color: #C9D9CC;
+    margin-bottom: 4px;
+  }
+  .drawer-label h1{
+    font-size: clamp(1.5rem, 3vw, 2.2rem);
+    font-weight: 600;
+    font-style: italic;
+  }
+  .drawer-label .author{
+    font-size: 1rem;
+    color: #D8E3D4;
+    margin-top: 2px;
+  }
+
+  main{
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: clamp(16px,4vw,40px);
+  }
+
+  /* Hero stamp */
+  .hero{
+    display:flex;
+    gap: clamp(20px,4vw,48px);
+    align-items:center;
+    flex-wrap: wrap;
+    padding: 28px 0 36px;
+    border-bottom: 1px solid var(--card-line);
+    margin-bottom: 28px;
+  }
+  .stamp{
+    width: 168px;
+    height: 168px;
+    border-radius: 50%;
+    border: 3px double var(--stamp-red);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    transform: rotate(-4deg);
+    color: var(--stamp-red);
+    flex: none;
+    background: var(--parchment-light);
+  }
+  .stamp .stamp-number{ font-size: 2.1rem; line-height:1; font-weight:700; }
+  .stamp .stamp-sub{ font-size: 0.72rem; margin-top:4px; text-align:center; padding:0 10px; color: var(--stamp-red); }
+  .hero-text h2{ font-size: 1.3rem; font-weight:600; margin-bottom:6px; }
+  .hero-text p{ margin:0; color: var(--ink-soft); max-width: 60ch; line-height:1.5; }
+  .as-of{ font-size: 0.85rem; color: var(--ink-soft); margin-top:8px; }
+
+  /* Stat strip */
+  .stat-strip{
+    display:grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px,1fr));
+    border-top: 1px solid var(--card-line);
+    border-bottom: 1px solid var(--card-line);
+    margin-bottom: 40px;
+  }
+  .stat{
+    padding: 16px 18px;
+    border-left: 1px solid var(--card-line);
+  }
+  .stat:first-child{ border-left:none; }
+  .stat .num{ font-family:'Lora', serif; font-size: 1.6rem; font-weight:600; }
+  .stat .lbl{ font-size: 0.82rem; color: var(--ink-soft); margin-top:2px; }
+
+  section{ margin-bottom: 48px; }
+  section > h3{
+    font-size: 1.15rem;
+    font-weight: 600;
+    font-style: italic;
+    margin-bottom: 4px;
+  }
+  section > .desc{ color: var(--ink-soft); font-size:0.9rem; margin-bottom:16px; max-width: 68ch; }
+
+  .card{
+    background: var(--parchment-light);
+    border: 1px solid var(--card-line);
+    padding: 20px;
+    position: relative;
+  }
+  .card::before{
+    content:"";
+    position:absolute;
+    top:0; left: 24px; right:24px;
+    height:0;
+    border-top: 1px dashed var(--card-line);
+  }
+  .card-inner{ padding-top: 6px; }
+
+  table{ width:100%; border-collapse: collapse; font-size: 0.92rem; }
+  th{ text-align:left; font-weight:600; color: var(--ink-soft); font-size:0.78rem; padding: 6px 10px; border-bottom: 1px solid var(--line-strong); }
+  td{ padding: 9px 10px; border-bottom: 1px solid var(--card-line); vertical-align: top; }
+  tr:last-child td{ border-bottom:none; }
+
+  .badge{
+    display:inline-block;
+    padding: 2px 9px;
+    font-size: 0.76rem;
+    font-weight:600;
+    border: 1px solid currentColor;
+    border-radius: 3px;
+  }
+  .badge.available{ color: var(--available); }
+  .badge.loaned{ color: var(--stamp-red); }
+  .badge.reserved{ color: var(--brass); }
+
+  .lib-name{ font-weight:600; }
+  .lib-city{ color: var(--ink-soft); font-size: 0.85rem; }
+
+  .empty-state{
+    padding: 28px 20px;
+    text-align:center;
+    color: var(--ink-soft);
+    font-size: 0.92rem;
+    line-height:1.6;
+  }
+
+  .grid-2{ display:grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  @media (max-width: 800px){ .grid-2{ grid-template-columns: 1fr; } }
+
+  canvas{ max-height: 320px; }
+
+  .heatmap-wrap{ overflow-x:auto; }
+  .heatmap{ border-collapse: collapse; font-size: 0.78rem; }
+  .heatmap th, .heatmap td{ padding: 6px 8px; border: 1px solid var(--parchment); text-align:center; }
+  .heatmap th{ background: transparent; border:none; color: var(--ink-soft); font-weight:500; }
+  .heatmap td.lib-col{ text-align:left; font-weight:600; border:none; padding-right: 14px; white-space:nowrap; }
+  .cell-available{ background: var(--available); }
+  .cell-loaned{ background: var(--stamp-red); }
+  .cell-reserved{ background: var(--brass); }
+  .legend{ display:flex; gap:16px; margin-top:10px; font-size:0.78rem; color: var(--ink-soft); align-items:center; flex-wrap:wrap; }
+  .legend .swatch{ display:inline-block; width:10px; height:10px; margin-right:5px; vertical-align:middle; }
+
+  .alert-row{
+    border-left: 3px solid var(--stamp-red);
+    padding: 10px 14px;
+    margin-bottom: 8px;
+    background: var(--parchment-light);
+    border-top: 1px solid var(--card-line);
+    border-right: 1px solid var(--card-line);
+    border-bottom: 1px solid var(--card-line);
+    font-size: 0.9rem;
+  }
+  .alert-row.positive{ border-left-color: var(--available); }
+
+  footer{
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: 0 clamp(16px,4vw,40px) 40px;
+    color: var(--ink-soft);
+    font-size: 0.8rem;
+  }
+</style>
+</head>
+<body>
+
+<div class="drawer-label">
+  <div class="kicker" id="branchCountKicker">Availability tracker &middot; Flemish public libraries</div>
+  <h1 id="bookTitle">Loading…</h1>
+  <div class="author" id="bookAuthor"></div>
+</div>
+
+<main>
+
+  <div class="hero">
+    <div class="stamp">
+      <div class="stamp-number" id="stampFraction">–/–</div>
+      <div class="stamp-sub">copies available now</div>
+    </div>
+    <div class="hero-text">
+      <h2>Network snapshot</h2>
+      <p id="heroSummary">Waiting for data…</p>
+      <div class="as-of" id="asOf"></div>
+    </div>
+  </div>
+
+  <div class="stat-strip" id="statStrip"></div>
+
+  <section>
+    <h3>Availability by library</h3>
+    <div class="desc">Every branch that holds a copy, as of the most recent crawl. "Expected back" comes straight from the library system's own due date for items on loan.</div>
+    <div class="card"><div class="card-inner">
+      <table id="libraryTable">
+        <thead><tr><th>Library</th><th>Copies</th><th>Status</th><th>Expected back</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div></div>
+  </section>
+
+  <section>
+    <h3>Network-wide availability trend</h3>
+    <div class="desc">Share of all copies in Flanders that are available to borrow right now, tracked day by day.</div>
+    <div class="card"><div class="card-inner">
+      <canvas id="trendChart"></canvas>
+      <div class="empty-state" id="trendEmpty" style="display:none;">Only one day of data so far — this chart fills in once the daily crawl has run for a few more days.</div>
+    </div></div>
+  </section>
+
+  <div class="grid-2">
+    <section>
+      <h3>Loan &amp; return activity</h3>
+      <div class="desc">How often copies get borrowed and returned, detected by comparing each day's snapshot to the last.</div>
+      <div class="card"><div class="card-inner">
+        <canvas id="eventsChart"></canvas>
+        <div class="empty-state" id="eventsEmpty">Loan/return events need at least two days of history to detect — check back tomorrow.</div>
+      </div></div>
+    </section>
+
+    <section>
+      <h3>Reservation queue per library</h3>
+      <div class="desc">Holds placed on this title, which often signal demand before it shows up in loan counts.</div>
+      <div class="card"><div class="card-inner">
+        <canvas id="reservationChart"></canvas>
+        <div class="empty-state" id="reservationEmpty" style="display:none;"></div>
+      </div></div>
+    </section>
+  </div>
+
+  <section>
+    <h3>Availability calendar, all libraries</h3>
+    <div class="desc">One column per day this book has been tracked, one row per library. Fills in as the crawl accumulates history.</div>
+    <div class="card"><div class="card-inner">
+      <div class="heatmap-wrap" id="heatmapWrap"></div>
+      <div class="legend">
+        <span><span class="swatch cell-available"></span>Available</span>
+        <span><span class="swatch cell-loaned"></span>On loan</span>
+        <span><span class="swatch cell-reserved"></span>Reserved, none free</span>
+      </div>
+    </div></div>
+  </section>
+
+  <div class="grid-2">
+    <section>
+      <h3>Loans by day of week</h3>
+      <div class="desc">Which days this title tends to go out, once enough loan events have been observed.</div>
+      <div class="card"><div class="card-inner">
+        <canvas id="weekdayChart"></canvas>
+        <div class="empty-state" id="weekdayEmpty">Not enough loan events yet to see a weekday pattern.</div>
+      </div></div>
+    </section>
+
+    <section>
+      <h3>Recent changes</h3>
+      <div class="desc">Copies that became available or got borrowed since the previous crawl.</div>
+      <div class="card"><div class="card-inner" id="alertsBox">
+        <div class="empty-state">Only one snapshot so far — comparisons start appearing after the second daily crawl.</div>
+      </div></div>
+    </section>
+  </div>
+
+  <section>
+    <h3>Expected return dates</h3>
+    <div class="desc">Copies currently on loan, soonest due date first.</div>
+    <div class="card"><div class="card-inner">
+      <table id="returnsTable">
+        <thead><tr><th>Library</th><th>Due back</th><th>Days left</th></tr></thead>
+        <tbody></tbody>
+      </table>
+      <div class="empty-state" id="returnsEmpty" style="display:none;">No copies currently on loan.</div>
+    </div></div>
+  </section>
+
+</main>
+
+<footer>
+  Data source: cataloguswebservices.bibliotheek.be (Flemish public library network). Updated daily by a scheduled crawl.
+</footer>
+
+<script>
+const CHART_FONT = "Inter, sans-serif";
+const COLORS = {
+  green: '#1F3D2E', available: '#3F7A57', red: '#9B3B2E', brass: '#A97E3D', ink: '#241F16', softline: '#C9BB9A'
+};
+
+async function loadHistory(){
+  const res = await fetch('data/history.jsonl', {cache: 'no-store'});
+  const text = await res.text();
+  return text.split('\n').filter(l => l.trim().length).map(l => JSON.parse(l))
+    .sort((a,b) => new Date(a.fetched_at) - new Date(b.fetched_at));
+}
+
+function fmtDate(iso){
+  return new Date(iso).toLocaleDateString('en-GB', {day:'numeric', month:'short', year:'numeric'});
+}
+function fmtDateShort(iso){
+  return new Date(iso).toLocaleDateString('en-GB', {day:'numeric', month:'short'});
+}
+
+function branchKey(b){ return b.branch_id; }
+
+function buildBranchIndex(snapshots){
+  // branch_id -> { meta, series: [{date, available, total, reserved, onLoan}] }
+  const idx = {};
+  for (const snap of snapshots){
+    const day = snap.fetched_at.slice(0,10);
+    for (const b of snap.branches){
+      const key = branchKey(b);
+      if (!idx[key]) idx[key] = { meta: b, series: [] };
+      idx[key].meta = b; // keep latest meta
+      idx[key].series.push({
+        date: day, fetched_at: snap.fetched_at,
+        available: b.available_copies, total: b.total_copies,
+        reserved: b.reserved_copies, onLoan: b.on_loan_copies
+      });
+    }
+  }
+  return idx;
+}
+
+function detectEvents(snapshots){
+  // Track each physical item (by item_id) across snapshots to find
+  // available -> unavailable (loan) and unavailable -> available (return) transitions.
+  const lastState = {}; // item_id -> {available, branch, city, date}
+  const events = []; // {date, type: 'loan'|'return', branch, city}
+  for (const snap of snapshots){
+    const day = snap.fetched_at.slice(0,10);
+    for (const b of snap.branches){
+      for (const it of b.items){
+        const prev = lastState[it.item_id];
+        if (prev && prev.available !== it.available){
+          events.push({
+            date: day,
+            type: (prev.available && !it.available) ? 'loan' : 'return',
+            branch: b.branch_name, city: b.city
+          });
+        }
+        lastState[it.item_id] = { available: it.available, branch: b.branch_name, city: b.city, date: day };
+      }
+    }
+  }
+  return events;
+}
+
+function renderHeader(latest){
+  document.getElementById('bookTitle').textContent = latest.book.title || 'Untitled';
+  document.getElementById('bookAuthor').textContent = latest.book.author || '';
+  document.getElementById('branchCountKicker').textContent =
+    `Availability tracker · ${latest.network.branch_count} ${latest.network.branch_count === 1 ? 'library' : 'libraries'} in Flanders`;
+}
+
+function renderHero(latest){
+  document.getElementById('stampFraction').textContent =
+    `${latest.network.available_copies}/${latest.network.total_copies}`;
+  const pct = latest.network.total_copies ? Math.round(100*latest.network.available_copies/latest.network.total_copies) : 0;
+  document.getElementById('heroSummary').textContent =
+    `${latest.network.available_copies} of ${latest.network.total_copies} copies of "${latest.book.title}" are available to borrow right now, across ${latest.network.branch_count} libraries (${pct}% availability).`;
+  document.getElementById('asOf').textContent = `Last checked ${fmtDate(latest.fetched_at)}`;
+}
+
+function renderStatStrip(latest){
+  const onLoan = latest.branches.reduce((s,b)=>s+b.on_loan_copies,0);
+  const reserved = latest.branches.reduce((s,b)=>s+b.reserved_copies,0);
+  const stats = [
+    ['Total copies', latest.network.total_copies],
+    ['Available now', latest.network.available_copies],
+    ['On loan', onLoan],
+    ['Reserved', reserved],
+    ['Branches tracked', latest.network.branch_count],
+  ];
+  const el = document.getElementById('statStrip');
+  el.innerHTML = stats.map(([lbl,num]) => `<div class="stat"><div class="num">${num}</div><div class="lbl">${lbl}</div></div>`).join('');
+}
+
+function branchStatus(b){
+  if (b.available_copies > 0) return {label:'Available', cls:'available'};
+  if (b.reserved_copies > 0 && b.on_loan_copies === 0) return {label:'Reserved', cls:'reserved'};
+  return {label:'On loan', cls:'loaned'};
+}
+
+function nearestReturnDate(b){
+  const dates = b.items.filter(i=>i.return_date).map(i=>i.return_date).sort();
+  return dates.length ? dates[0] : null;
+}
+
+function renderLibraryTable(latest){
+  const tbody = document.querySelector('#libraryTable tbody');
+  const branches = [...latest.branches].sort((a,b)=> (a.city||'').localeCompare(b.city||'') || a.branch_name.localeCompare(b.branch_name));
+  tbody.innerHTML = branches.map(b=>{
+    const st = branchStatus(b);
+    const ret = nearestReturnDate(b);
+    return `<tr>
+      <td><div class="lib-name">${b.branch_name}</div><div class="lib-city">${b.city||''}</div></td>
+      <td>${b.available_copies}/${b.total_copies}</td>
+      <td><span class="badge ${st.cls}">${st.label}</span></td>
+      <td>${ret ? fmtDate(ret) : '–'}</td>
+    </tr>`;
+  }).join('');
+}
+
+function renderTrendChart(snapshots){
+  const labels = snapshots.map(s=>fmtDateShort(s.fetched_at));
+  const data = snapshots.map(s=> s.network.total_copies ? Math.round(100*s.network.available_copies/s.network.total_copies) : 0);
+  if (snapshots.length < 2){
+    document.getElementById('trendEmpty').style.display = 'block';
+  }
+  new Chart(document.getElementById('trendChart'), {
+    type: 'line',
+    data: { labels, datasets: [{ label:'Availability %', data, borderColor: COLORS.green, backgroundColor: 'rgba(31,61,46,0.12)', fill:true, tension:0.25, pointRadius:4 }]},
+    options: {
+      plugins:{ legend:{display:false}, title:{display:false} },
+      scales:{ y:{ min:0, max:100, ticks:{ callback:v=>v+'%', font:{family:CHART_FONT} } }, x:{ ticks:{font:{family:CHART_FONT}} } }
+    }
+  });
+}
+
+function renderEventsChart(events){
+  if (events.length === 0){
+    document.getElementById('eventsEmpty').style.display = 'block';
+    return;
+  }
+  document.getElementById('eventsEmpty').style.display = 'none';
+  // weekly buckets
+  const weekKey = d => { const dt=new Date(d); const onejan=new Date(dt.getFullYear(),0,1); const week=Math.ceil((((dt-onejan)/86400000)+onejan.getDay()+1)/7); return `${dt.getFullYear()}-W${week}`; };
+  const buckets = {};
+  for (const e of events){
+    const wk = weekKey(e.date);
+    buckets[wk] = buckets[wk] || {loan:0, return:0};
+    buckets[wk][e.type]++;
+  }
+  const weeks = Object.keys(buckets).sort();
+  new Chart(document.getElementById('eventsChart'), {
+    type:'bar',
+    data:{ labels: weeks, datasets:[
+      {label:'Loans', data: weeks.map(w=>buckets[w].loan), backgroundColor: COLORS.red},
+      {label:'Returns', data: weeks.map(w=>buckets[w].return), backgroundColor: COLORS.available},
+    ]},
+    options:{ plugins:{legend:{labels:{font:{family:CHART_FONT}}}}, scales:{x:{ticks:{font:{family:CHART_FONT}}}, y:{beginAtZero:true, ticks:{stepSize:1, font:{family:CHART_FONT}}}} }
+  });
+}
+
+function renderReservationChart(branchIndex, snapshots){
+  const keys = Object.keys(branchIndex);
+  const anyReserved = keys.some(k => branchIndex[k].series.some(s=>s.reserved>0));
+  const labels = snapshots.map(s=>fmtDateShort(s.fetched_at));
+  if (!anyReserved){
+    document.getElementById('reservationEmpty').style.display = 'block';
+    document.getElementById('reservationEmpty').textContent = 'No reservations recorded yet for any library.';
+  }
+  const palette = [COLORS.green, COLORS.red, COLORS.brass, COLORS.available, '#5B4636', '#7A6E4E'];
+  const datasets = keys.map((k,i)=>{
+    const b = branchIndex[k];
+    const byDate = Object.fromEntries(b.series.map(s=>[s.date, s.reserved]));
+    return { label: b.meta.branch_name, data: snapshots.map(s=> byDate[s.fetched_at.slice(0,10)] ?? null), borderColor: palette[i%palette.length], tension:0.25, pointRadius:3, spanGaps:true };
+  });
+  new Chart(document.getElementById('reservationChart'), {
+    type:'line',
+    data:{ labels, datasets },
+    options:{ plugins:{legend:{labels:{font:{family:CHART_FONT}}}}, scales:{ y:{beginAtZero:true, ticks:{stepSize:1, font:{family:CHART_FONT}}}, x:{ticks:{font:{family:CHART_FONT}}} } }
+  });
+}
+
+function renderWeekdayChart(events){
+  if (events.filter(e=>e.type==='loan').length < 3){
+    return; // keep empty state visible
+  }
+  document.getElementById('weekdayEmpty').style.display='none';
+  const names=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const counts=new Array(7).fill(0);
+  events.filter(e=>e.type==='loan').forEach(e=>{ counts[new Date(e.date).getDay()]++; });
+  new Chart(document.getElementById('weekdayChart'), {
+    type:'bar',
+    data:{ labels: names, datasets:[{label:'Loans', data:counts, backgroundColor: COLORS.green}]},
+    options:{ plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true, ticks:{stepSize:1, font:{family:CHART_FONT}}}, x:{ticks:{font:{family:CHART_FONT}}}} }
+  });
+}
+
+function renderHeatmap(branchIndex, snapshots){
+  const dates = snapshots.map(s=>s.fetched_at.slice(0,10));
+  const keys = Object.keys(branchIndex).sort((a,b)=>{
+    const ba=branchIndex[a].meta, bb=branchIndex[b].meta;
+    return (ba.city||'').localeCompare(bb.city||'') || ba.branch_name.localeCompare(bb.branch_name);
+  });
+  let html = '<table class="heatmap"><thead><tr><th></th>' + dates.map(d=>`<th>${fmtDateShort(d+'T00:00:00Z')}</th>`).join('') + '</tr></thead><tbody>';
+  for (const k of keys){
+    const b = branchIndex[k];
+    const byDate = Object.fromEntries(b.series.map(s=>[s.date,s]));
+    html += `<tr><td class="lib-col">${b.meta.branch_name} <span class="lib-city">(${b.meta.city||''})</span></td>`;
+    for (const d of dates){
+      const s = byDate[d];
+      let cls = '';
+      if (s){
+        if (s.available>0) cls='cell-available';
+        else if (s.reserved>0 && s.onLoan===0) cls='cell-reserved';
+        else cls='cell-loaned';
+      }
+      html += `<td class="${cls}" title="${s ? `${s.available}/${s.total} available` : 'no data'}">&nbsp;</td>`;
+    }
+    html += '</tr>';
+  }
+  html += '</tbody></table>';
+  document.getElementById('heatmapWrap').innerHTML = html;
+}
+
+function renderAlerts(snapshots){
+  if (snapshots.length < 2) return; // keep default empty state
+  const prev = snapshots[snapshots.length-2];
+  const curr = snapshots[snapshots.length-1];
+  const prevByBranch = Object.fromEntries(prev.branches.map(b=>[branchKey(b), b]));
+  const rows = [];
+  for (const b of curr.branches){
+    const p = prevByBranch[branchKey(b)];
+    if (!p) { rows.push({positive:true, text:`${b.branch_name} (${b.city}) started tracking this title with ${b.available_copies}/${b.total_copies} available.`}); continue; }
+    if (b.available_copies > p.available_copies){
+      rows.push({positive:true, text:`${b.branch_name} (${b.city}): a copy became available (${p.available_copies}→${b.available_copies}).`});
+    } else if (b.available_copies < p.available_copies){
+      rows.push({positive:false, text:`${b.branch_name} (${b.city}): a copy was borrowed (${p.available_copies}→${b.available_copies}).`});
+    }
+  }
+  const box = document.getElementById('alertsBox');
+  if (rows.length === 0){
+    box.innerHTML = '<div class="empty-state">No change in availability since the previous crawl.</div>';
+    return;
+  }
+  box.innerHTML = rows.map(r=>`<div class="alert-row ${r.positive?'positive':''}">${r.text}</div>`).join('');
+}
+
+function renderReturnsTable(latest){
+  const rows = [];
+  for (const b of latest.branches){
+    for (const it of b.items){
+      if (it.status_code === 'loanedout' && it.return_date){
+        rows.push({ branch: b.branch_name, city: b.city, date: it.return_date });
+      }
+    }
+  }
+  rows.sort((a,b)=> a.date.localeCompare(b.date));
+  const tbody = document.querySelector('#returnsTable tbody');
+  if (rows.length === 0){
+    document.getElementById('returnsEmpty').style.display = 'block';
+    tbody.innerHTML = '';
+    return;
+  }
+  const today = new Date(); today.setHours(0,0,0,0);
+  tbody.innerHTML = rows.map(r=>{
+    const due = new Date(r.date);
+    const daysLeft = Math.round((due-today)/86400000);
+    return `<tr><td><div class="lib-name">${r.branch}</div><div class="lib-city">${r.city||''}</div></td><td>${fmtDate(r.date)}</td><td>${daysLeft >= 0 ? daysLeft+' days' : 'overdue'}</td></tr>`;
+  }).join('');
+}
+
+async function main(){
+  let snapshots;
+  try{
+    snapshots = await loadHistory();
+  } catch (e){
+    document.getElementById('bookTitle').textContent = 'Could not load data';
+    document.getElementById('heroSummary').textContent = 'This dashboard needs to be served over http(s) (e.g. GitHub Pages) so it can fetch data/history.jsonl — opening the file directly won\'t work.';
+    return;
+  }
+  if (!snapshots.length) return;
+  const latest = snapshots[snapshots.length-1];
+  const branchIndex = buildBranchIndex(snapshots);
+  const events = detectEvents(snapshots);
+
+  renderHeader(latest);
+  renderHero(latest);
+  renderStatStrip(latest);
+  renderLibraryTable(latest);
+  renderTrendChart(snapshots);
+  renderEventsChart(events);
+  renderReservationChart(branchIndex, snapshots);
+  renderWeekdayChart(events);
+  renderHeatmap(branchIndex, snapshots);
+  renderAlerts(snapshots);
+  renderReturnsTable(latest);
+}
+
+main();
+</script>
+</body>
+</html>

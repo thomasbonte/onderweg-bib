@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-10-01T11:14:46+00:00",
+  "fetched_at": "2026-10-02T10:47:20+00:00",
   "book": {
     "title": "Onderweg",
     "author": "Evelyn Vancauwenberghe",
@@ -9,9 +9,9 @@
     "detail_page": "https://www.bibliotheek.be/catalogus?itemid=|library/marc/vlacc|10579988"
   },
   "network": {
-    "total_copies": 5,
+    "total_copies": 6,
     "available_copies": 1,
-    "branch_count": 5
+    "branch_count": 6
   },
   "branches": [
     {
@@ -143,6 +143,39 @@
           "location_in_branch": "Waargebeurd, alfabetisch op",
           "received_date": "2026-04-08",
           "return_date": "2026-10-28"
+        }
+      ]
+    },
+    {
+      "city": null,
+      "branch_name": "Bibliotheek Sint-Martens-Latem",
+      "branch_id": "/root/bibnet/Oost-Vlaanderen/Sint-Martens-Latem",
+      "wise_branch_id": "3420",
+      "latitude": 51.020952,
+      "longitude": 3.641197,
+      "url": "https://sint-martens-latem.bibliotheek.be/",
+      "address": {
+        "street": "Latemstraat",
+        "number": "78",
+        "postcode": "9830",
+        "city": "SINT-MARTENS-LATEM"
+      },
+      "total_copies": 1,
+      "available_copies": 0,
+      "on_loan_copies": 0,
+      "reserved_copies": 0,
+      "items": [
+        {
+          "item_id": "33912171",
+          "wiseid": "5074229",
+          "available": false,
+          "status_code": "notavailable",
+          "status_label": "Niet beschikbaar",
+          "count": 1,
+          "shelfmark": "VANC",
+          "location_in_branch": "Nieuw fictie 2026",
+          "received_date": "2026-10-01",
+          "return_date": null
         }
       ]
     },

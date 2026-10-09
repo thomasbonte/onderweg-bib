@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-10-08T11:40:31+00:00",
+  "fetched_at": "2026-10-09T11:33:58+00:00",
   "book": {
     "title": "Onderweg",
     "author": "Evelyn Vancauwenberghe",
@@ -9,9 +9,9 @@
     "detail_page": "https://www.bibliotheek.be/catalogus?itemid=|library/marc/vlacc|10579988"
   },
   "network": {
-    "total_copies": 6,
+    "total_copies": 7,
     "available_copies": 1,
-    "branch_count": 6
+    "branch_count": 7
   },
   "branches": [
     {
@@ -143,6 +143,39 @@
           "location_in_branch": "Waargebeurd, alfabetisch op",
           "received_date": "2026-04-08",
           "return_date": "2026-10-28"
+        }
+      ]
+    },
+    {
+      "city": "Nazareth-De Pinte",
+      "branch_name": "Bibliotheek Nazareth",
+      "branch_id": "/root/bibnet/Oost-Vlaanderen/Nazareth-De Pinte/Nazareth",
+      "wise_branch_id": "3410",
+      "latitude": 50.960022,
+      "longitude": 3.59758,
+      "url": "https://nazarethdepinte.bibliotheek.be/location/root/bibnet/Oost-Vlaanderen/Nazareth-De Pinte/Nazareth",
+      "address": {
+        "street": "DORP",
+        "number": "2",
+        "postcode": "9810",
+        "city": "NAZARETH-DE PINTE"
+      },
+      "total_copies": 1,
+      "available_copies": 0,
+      "on_loan_copies": 0,
+      "reserved_copies": 0,
+      "items": [
+        {
+          "item_id": "33947397",
+          "wiseid": "5074229",
+          "available": false,
+          "status_code": "notavailable",
+          "status_label": "Niet beschikbaar",
+          "count": 1,
+          "shelfmark": "VANC",
+          "location_in_branch": "Nieuwe aanwinsten 2026",
+          "received_date": "2026-10-08",
+          "return_date": null
         }
       ]
     },

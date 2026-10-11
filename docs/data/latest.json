@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-10-10T10:51:57+00:00",
+  "fetched_at": "2026-10-11T10:50:21+00:00",
   "book": {
     "title": "Onderweg",
     "author": "Evelyn Vancauwenberghe",
@@ -11,6 +11,7 @@
   "network": {
     "total_copies": 7,
     "available_copies": 1,
+    "processing_copies": 3,
     "branch_count": 7
   },
   "branches": [
@@ -32,11 +33,13 @@
       "available_copies": 0,
       "on_loan_copies": 1,
       "reserved_copies": 0,
+      "processing_copies": 0,
       "items": [
         {
           "item_id": "33823598",
           "wiseid": "5074229",
           "available": false,
+          "state": "loaned",
           "status_code": "loanedout",
           "status_label": "Uitgeleend",
           "count": 1,
@@ -65,11 +68,13 @@
       "available_copies": 0,
       "on_loan_copies": 1,
       "reserved_copies": 0,
+      "processing_copies": 0,
       "items": [
         {
           "item_id": "33508208",
           "wiseid": "5074229",
           "available": false,
+          "state": "loaned",
           "status_code": "loanedout",
           "status_label": "Uitgeleend",
           "count": 1,
@@ -98,11 +103,13 @@
       "available_copies": 1,
       "on_loan_copies": 0,
       "reserved_copies": 0,
+      "processing_copies": 0,
       "items": [
         {
           "item_id": "33508215",
           "wiseid": "5074229",
           "available": true,
+          "state": "available",
           "status_code": "none",
           "status_label": "Aanwezig",
           "count": 1,
@@ -131,11 +138,13 @@
       "available_copies": 0,
       "on_loan_copies": 1,
       "reserved_copies": 0,
+      "processing_copies": 0,
       "items": [
         {
           "item_id": "33159468",
           "wiseid": "5074229",
           "available": false,
+          "state": "loaned",
           "status_code": "loanedout",
           "status_label": "Uitgeleend",
           "count": 1,
@@ -164,11 +173,13 @@
       "available_copies": 0,
       "on_loan_copies": 0,
       "reserved_copies": 0,
+      "processing_copies": 1,
       "items": [
         {
           "item_id": "33947397",
           "wiseid": "5074229",
           "available": false,
+          "state": "processing",
           "status_code": "notavailable",
           "status_label": "Niet beschikbaar",
           "count": 1,
@@ -180,7 +191,7 @@
       ]
     },
     {
-      "city": null,
+      "city": "Sint-Martens-Latem",
       "branch_name": "Bibliotheek Sint-Martens-Latem",
       "branch_id": "/root/bibnet/Oost-Vlaanderen/Sint-Martens-Latem",
       "wise_branch_id": "3420",
@@ -197,11 +208,13 @@
       "available_copies": 0,
       "on_loan_copies": 0,
       "reserved_copies": 0,
+      "processing_copies": 1,
       "items": [
         {
           "item_id": "33912171",
           "wiseid": "5074229",
           "available": false,
+          "state": "processing",
           "status_code": "notavailable",
           "status_label": "Niet beschikbaar",
           "count": 1,
@@ -230,11 +243,13 @@
       "available_copies": 0,
       "on_loan_copies": 0,
       "reserved_copies": 0,
+      "processing_copies": 1,
       "items": [
         {
           "item_id": "33856824",
           "wiseid": "5074229",
           "available": false,
+          "state": "processing",
           "status_code": "notavailable",
           "status_label": "Niet beschikbaar",
           "count": 1,

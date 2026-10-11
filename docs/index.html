@@ -18,6 +18,7 @@
     --ink: #2A2013;
     --ink-soft: #5C523C;
     --available: #4C7A4F;
+    --processing: #6E8B94;
     --card-line: #D8C6A0;
     --line-strong: #A98F5E;
   }
@@ -168,6 +169,7 @@
   .badge.available{ color: var(--available); }
   .badge.loaned{ color: var(--rust); }
   .badge.reserved{ color: var(--ochre); }
+  .badge.processing{ color: var(--processing); }
 
   .lib-name{ font-weight:600; }
   .lib-city{ color: var(--ink-soft); font-size: 0.85rem; }
@@ -193,6 +195,7 @@
   .cell-available{ background: var(--available); }
   .cell-loaned{ background: var(--rust); }
   .cell-reserved{ background: var(--ochre); }
+  .cell-processing{ background: var(--processing); }
   .legend{ display:flex; gap:16px; margin-top:10px; font-size:0.78rem; color: var(--ink-soft); align-items:center; flex-wrap:wrap; }
   .legend .swatch{ display:inline-block; width:10px; height:10px; margin-right:5px; vertical-align:middle; }
 
@@ -295,6 +298,7 @@
         <span><span class="swatch cell-available"></span>Beschikbaar</span>
         <span><span class="swatch cell-loaned"></span>Uitgeleend</span>
         <span><span class="swatch cell-reserved"></span>Gereserveerd, geen vrij exemplaar</span>
+        <span><span class="swatch cell-processing"></span>Niet beschikbaar (in verwerking)</span>
       </div>
     </div></div>
   </section>
@@ -358,6 +362,16 @@ function fmtDateShort(iso){
 
 function branchKey(b){ return b.branch_id; }
 
+// State of one copy. Older snapshots (before the 'niet beschikbaar' state was
+// tracked) have no `state` field, so derive it from the raw status.
+function itemState(it){
+  if (it.state) return it.state;
+  if (it.available) return 'available';
+  if (it.status_code === 'loanedout') return 'loaned';
+  if (it.status_code === 'hasreservation') return 'reserved';
+  return 'other';
+}
+
 function buildBranchIndex(snapshots){
   // branch_id -> { meta, series: [{date, available, total, reserved, onLoan}] }
   const idx = {};
@@ -370,7 +384,7 @@ function buildBranchIndex(snapshots){
       idx[key].series.push({
         date: day, fetched_at: snap.fetched_at,
         available: b.available_copies, total: b.total_copies,
-        reserved: b.reserved_copies, onLoan: b.on_loan_copies
+        reserved: b.reserved_copies, onLoan: b.on_loan_copies, processing: b.processing_copies || 0
       });
     }
   }
@@ -378,23 +392,26 @@ function buildBranchIndex(snapshots){
 }
 
 function detectEvents(snapshots){
-  // Track each physical item (by item_id) across snapshots to find
-  // available -> unavailable (loan) and unavailable -> available (return) transitions.
-  const lastState = {}; // item_id -> {available, branch, city, date}
+  // Track each physical item (by item_id) across snapshots.
+  //  available -> loaned            = loan
+  //  loaned/reserved -> available   = return
+  // Transitions from/to 'processing' (niet beschikbaar) are not loans or
+  // returns: the copy is just being made ready for lending.
+  const lastState = {}; // item_id -> {state}
   const events = []; // {date, type: 'loan'|'return', branch, city}
   for (const snap of snapshots){
     const day = snap.fetched_at.slice(0,10);
     for (const b of snap.branches){
       for (const it of b.items){
+        const state = itemState(it);
         const prev = lastState[it.item_id];
-        if (prev && prev.available !== it.available){
-          events.push({
-            date: day,
-            type: (prev.available && !it.available) ? 'loan' : 'return',
-            branch: b.branch_name, city: b.city
-          });
+        if (prev){
+          let type = null;
+          if (prev.state === 'available' && (state === 'loaned' || state === 'reserved')) type = 'loan';
+          else if ((prev.state === 'loaned' || prev.state === 'reserved') && state === 'available') type = 'return';
+          if (type) events.push({ date: day, type, branch: b.branch_name, city: b.city });
         }
-        lastState[it.item_id] = { available: it.available, branch: b.branch_name, city: b.city, date: day };
+        lastState[it.item_id] = { state };
       }
     }
   }
@@ -410,10 +427,13 @@ function renderHeader(latest){
 
 function renderHero(latest){
   document.getElementById('stampFraction').textContent =
-    `${latest.network.available_copies}/${latest.network.total_copies}`;
-  const pct = latest.network.total_copies ? Math.round(100*latest.network.available_copies/latest.network.total_copies) : 0;
-  document.getElementById('heroSummary').textContent =
-    `${latest.network.available_copies} van de ${latest.network.total_copies} exemplaren van "${latest.book.title}" zijn nu te leen, verspreid over ${latest.network.branch_count} bibliotheken (${pct}% beschikbaarheid).`;
+    `${latest.network.available_copies}/${latest.network.total_copies - (latest.network.processing_copies || 0)}`;
+  const processing = latest.network.processing_copies || 0;
+  const loanable = latest.network.total_copies - processing;
+  const pct = loanable ? Math.round(100*latest.network.available_copies/loanable) : 0;
+  let text = `${latest.network.available_copies} van de ${loanable} uitleenbare exemplaren van "${latest.book.title}" zijn nu te leen, verspreid over ${latest.network.branch_count} bibliotheken (${pct}% beschikbaarheid).`;
+  if (processing > 0) text += ` Daarnaast ${processing === 1 ? 'is 1 exemplaar' : 'zijn ' + processing + ' exemplaren'} nog in verwerking en nog niet uitleenbaar.`;
+  document.getElementById('heroSummary').textContent = text;
   document.getElementById('asOf').textContent = `Laatst gecontroleerd op ${fmtDate(latest.fetched_at)}`;
 }
 
@@ -425,6 +445,7 @@ function renderStatStrip(latest){
     ['Nu beschikbaar', latest.network.available_copies],
     ['Uitgeleend', onLoan],
     ['Gereserveerd', reserved],
+    ['In verwerking', latest.network.processing_copies || 0],
     ['Gevolgde bibliotheken', latest.network.branch_count],
   ];
   const el = document.getElementById('statStrip');
@@ -433,6 +454,7 @@ function renderStatStrip(latest){
 
 function branchStatus(b){
   if (b.available_copies > 0) return {label:'Beschikbaar', cls:'available'};
+  if ((b.processing_copies || 0) > 0 && b.on_loan_copies === 0 && b.reserved_copies === 0) return {label:'Niet beschikbaar (in verwerking)', cls:'processing'};
   if (b.reserved_copies > 0 && b.on_loan_copies === 0) return {label:'Gereserveerd', cls:'reserved'};
   return {label:'Uitgeleend', cls:'loaned'};
 }
@@ -448,18 +470,23 @@ function renderLibraryTable(latest){
   tbody.innerHTML = branches.map(b=>{
     const st = branchStatus(b);
     const ret = nearestReturnDate(b);
+    const procItem = st.cls === 'processing' ? b.items.find(i => itemState(i) === 'processing' && i.received_date) : null;
+    const lastCol = ret ? fmtDate(ret) : (procItem ? `<span class="lib-city">ontvangen op ${fmtDate(procItem.received_date)}</span>` : '–');
     return `<tr>
       <td><div class="lib-name">${b.branch_name}</div><div class="lib-city">${b.city||''}</div></td>
       <td>${b.available_copies}/${b.total_copies}</td>
       <td><span class="badge ${st.cls}">${st.label}</span></td>
-      <td>${ret ? fmtDate(ret) : '–'}</td>
+      <td>${lastCol}</td>
     </tr>`;
   }).join('');
 }
 
 function renderTrendChart(snapshots){
   const labels = snapshots.map(s=>fmtDateShort(s.fetched_at));
-  const data = snapshots.map(s=> s.network.total_copies ? Math.round(100*s.network.available_copies/s.network.total_copies) : 0);
+  const data = snapshots.map(s=>{
+    const loanable = s.network.total_copies - (s.network.processing_copies || 0);
+    return loanable ? Math.round(100*s.network.available_copies/loanable) : 0;
+  });
   if (snapshots.length < 2){
     document.getElementById('trendEmpty').style.display = 'block';
   }
@@ -550,6 +577,7 @@ function renderHeatmap(branchIndex, snapshots){
       let cls = '';
       if (s){
         if (s.available>0) cls='cell-available';
+        else if (s.processing>0 && s.onLoan===0 && s.reserved===0) cls='cell-processing';
         else if (s.reserved>0 && s.onLoan===0) cls='cell-reserved';
         else cls='cell-loaned';
       }

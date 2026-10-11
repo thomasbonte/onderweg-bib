@@ -49,6 +49,37 @@ def parse_date_ddmmyyyy(value):
         return value
 
 
+# Item states used throughout the snapshot data and the dashboard:
+#   available   - on the shelf, can be borrowed now
+#   loaned      - currently lent out
+#   reserved    - on hold for someone (not lent out, not free)
+#   processing  - "Niet beschikbaar": owned by the library but still being
+#                 processed (not yet available for lending)
+#   other       - anything we don't recognise (logged as a warning)
+KNOWN_STATUS_CODES = {
+    "none": "available",
+    "loanedout": "loaned",
+    "hasreservation": "reserved",
+}
+# Extra status codes that mean "being processed". Add to this set if the
+# crawl log warns about a status code for 'niet beschikbaar' that isn't
+# matched by the label check below.
+PROCESSING_STATUS_CODES = {"notavailable", "inprocess", "processing", "inprocessing"}
+PROCESSING_LABELS = ("niet beschikbaar", "in verwerking", "in behandeling")
+
+
+def classify_item(available, status_code, status_label):
+    label = (status_label or "").strip().lower()
+    code = (status_code or "").strip().lower()
+    if available:
+        return "available"
+    if code in PROCESSING_STATUS_CODES or any(p in label for p in PROCESSING_LABELS):
+        return "processing"
+    if code in KNOWN_STATUS_CODES:
+        return KNOWN_STATUS_CODES[code]
+    return "other"
+
+
 def extract_branches(locations_elem):
     """Walk the nested <location> tree and pull out every physical
     branch (a <location> that has a <holding> child), remembering the
@@ -78,15 +109,33 @@ def extract_branch(branch_elem, holding_elem, city_name):
     items_elem = branch_elem.find("items")
     items = []
     if items_elem is not None:
-        for item in items_elem.findall("item"):
+        for idx, item in enumerate(items_elem.findall("item")):
             count = int(item.attrib.get("count", "1") or 1)
+            available = item.attrib.get("available") == "true"
+            status_code = item.attrib.get("status")
+            status_label = item.findtext("status")
+            state = classify_item(available, status_code, status_label)
+            if state == "other":
+                # Surfaces in the GitHub Actions log so the classifier can be tuned.
+                print(
+                    f"::warning::Unrecognised item status at {branch_elem.attrib.get('name')}: "
+                    f"code={status_code!r} label={status_label!r}"
+                )
+            # Items still being processed may not have an itemid yet; fall back
+            # to other identifiers so the dashboard can still track them.
+            item_id = (
+                item.findtext("itemid")
+                or item.findtext("wiseid")
+                or f"{holding_elem.attrib.get('id')}-{idx}"
+            )
             items.append(
                 {
-                    "item_id": item.findtext("itemid"),
+                    "item_id": item_id,
                     "wiseid": item.findtext("wiseid"),
-                    "available": item.attrib.get("available") == "true",
-                    "status_code": item.attrib.get("status"),
-                    "status_label": item.findtext("status"),
+                    "available": available,
+                    "state": state,
+                    "status_code": status_code,
+                    "status_label": status_label,
                     "count": count,
                     "shelfmark": item.findtext("shelfmark"),
                     "location_in_branch": item.findtext("subloc"),
@@ -95,12 +144,14 @@ def extract_branch(branch_elem, holding_elem, city_name):
                 }
             )
 
+    def copies(state):
+        return sum(i["count"] for i in items if i["state"] == state)
+
     total_copies = sum(i["count"] for i in items)
-    available_copies = sum(i["count"] for i in items if i["available"])
-    on_loan_copies = sum(
-        i["count"] for i in items if not i["available"] and i["status_code"] == "loanedout"
-    )
-    reserved_copies = sum(i["count"] for i in items if i["status_code"] == "hasreservation")
+    available_copies = copies("available")
+    on_loan_copies = copies("loaned")
+    reserved_copies = copies("reserved")
+    processing_copies = copies("processing")
 
     address_elem = holding_elem.find("address")
     address = None
@@ -111,6 +162,11 @@ def extract_branch(branch_elem, holding_elem, city_name):
             "postcode": address_elem.findtext("postcode"),
             "city": address_elem.findtext("city"),
         }
+
+    # Some branches sit directly under the root with no city grouping above
+    # them (e.g. Sint-Martens-Latem); fall back to the address city.
+    if not city_name and address and address.get("city"):
+        city_name = address["city"].title()
 
     lat = holding_elem.attrib.get("latitude")
     lon = holding_elem.attrib.get("longitude")
@@ -128,6 +184,7 @@ def extract_branch(branch_elem, holding_elem, city_name):
         "available_copies": available_copies,
         "on_loan_copies": on_loan_copies,
         "reserved_copies": reserved_copies,
+        "processing_copies": processing_copies,
         "items": items,
     }
 
@@ -153,6 +210,7 @@ def parse_snapshot(xml_text: str) -> dict:
         "network": {
             "total_copies": sum(b["total_copies"] for b in branches),
             "available_copies": sum(b["available_copies"] for b in branches),
+            "processing_copies": sum(b["processing_copies"] for b in branches),
             "branch_count": len(branches),
         },
         "branches": branches,

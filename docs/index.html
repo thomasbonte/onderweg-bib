@@ -172,6 +172,8 @@
   .badge.processing{ color: var(--processing); }
 
   .lib-name{ font-weight:600; }
+  a.lib-link{ color: inherit; text-decoration: none; border-bottom: 1px solid var(--card-line); }
+  a.lib-link:hover{ color: var(--rust); border-bottom-color: var(--rust); }
   .lib-city{ color: var(--ink-soft); font-size: 0.85rem; }
 
   .empty-state{
@@ -362,6 +364,29 @@ function fmtDateShort(iso){
 
 function branchKey(b){ return b.branch_id; }
 
+function esc(str){
+  return String(str ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+// The `url` in the feed points to a location path that 404s, so keep only the
+// library's own domain and replace the path with the ?frabl= query.
+const LIBRARY_QUERY = '?frabl=4143FC36BF1ACA0';
+function libraryUrl(rawUrl){
+  try {
+    const u = new URL(rawUrl);
+    return u.origin + '/' + LIBRARY_QUERY;
+  } catch (e) {
+    return null;
+  }
+}
+// Library name as a link to the library's own website. Falls back to plain
+// text if the feed has no (valid) url.
+function libLink(b){
+  const name = esc(b.branch_name);
+  const href = b.url ? libraryUrl(b.url) : null;
+  if (!href) return name;
+  return `<a class="lib-link" href="${esc(href)}" target="_blank" rel="noopener">${name}</a>`;
+}
+
 // State of one copy. Older snapshots (before the 'niet beschikbaar' state was
 // tracked) have no `state` field, so derive it from the raw status.
 function itemState(it){
@@ -369,6 +394,7 @@ function itemState(it){
   if (it.available) return 'available';
   if (it.status_code === 'loanedout') return 'loaned';
   if (it.status_code === 'hasreservation') return 'reserved';
+  if (it.status_code === 'notavailable') return 'processing';
   return 'other';
 }
 
@@ -473,7 +499,7 @@ function renderLibraryTable(latest){
     const procItem = st.cls === 'processing' ? b.items.find(i => itemState(i) === 'processing' && i.received_date) : null;
     const lastCol = ret ? fmtDate(ret) : (procItem ? `<span class="lib-city">ontvangen op ${fmtDate(procItem.received_date)}</span>` : '–');
     return `<tr>
-      <td><div class="lib-name">${b.branch_name}</div><div class="lib-city">${b.city||''}</div></td>
+      <td><div class="lib-name">${libLink(b)}</div><div class="lib-city">${esc(b.city)}</div></td>
       <td>${b.available_copies}/${b.total_copies}</td>
       <td><span class="badge ${st.cls}">${st.label}</span></td>
       <td>${lastCol}</td>
@@ -571,7 +597,7 @@ function renderHeatmap(branchIndex, snapshots){
   for (const k of keys){
     const b = branchIndex[k];
     const byDate = Object.fromEntries(b.series.map(s=>[s.date,s]));
-    html += `<tr><td class="lib-col">${b.meta.branch_name} <span class="lib-city">(${b.meta.city||''})</span></td>`;
+    html += `<tr><td class="lib-col">${libLink(b.meta)} <span class="lib-city">(${esc(b.meta.city)})</span></td>`;
     for (const d of dates){
       const s = byDate[d];
       let cls = '';
@@ -597,11 +623,11 @@ function renderAlerts(snapshots){
   const rows = [];
   for (const b of curr.branches){
     const p = prevByBranch[branchKey(b)];
-    if (!p) { rows.push({positive:true, text:`${b.branch_name} (${b.city}) volgt deze titel voortaan mee, met ${b.available_copies}/${b.total_copies} beschikbaar.`}); continue; }
+    if (!p) { rows.push({positive:true, text:`${libLink(b)} (${esc(b.city)}) volgt deze titel voortaan mee, met ${b.available_copies}/${b.total_copies} beschikbaar.`}); continue; }
     if (b.available_copies > p.available_copies){
-      rows.push({positive:true, text:`${b.branch_name} (${b.city}): een exemplaar werd beschikbaar (${p.available_copies}→${b.available_copies}).`});
+      rows.push({positive:true, text:`${libLink(b)} (${esc(b.city)}): een exemplaar werd beschikbaar (${p.available_copies}→${b.available_copies}).`});
     } else if (b.available_copies < p.available_copies){
-      rows.push({positive:false, text:`${b.branch_name} (${b.city}): een exemplaar werd uitgeleend (${p.available_copies}→${b.available_copies}).`});
+      rows.push({positive:false, text:`${libLink(b)} (${esc(b.city)}): een exemplaar werd uitgeleend (${p.available_copies}→${b.available_copies}).`});
     }
   }
   const box = document.getElementById('alertsBox');
@@ -617,7 +643,7 @@ function renderReturnsTable(latest){
   for (const b of latest.branches){
     for (const it of b.items){
       if (it.status_code === 'loanedout' && it.return_date){
-        rows.push({ branch: b.branch_name, city: b.city, date: it.return_date });
+        rows.push({ b, city: b.city, date: it.return_date });
       }
     }
   }
@@ -632,7 +658,7 @@ function renderReturnsTable(latest){
   tbody.innerHTML = rows.map(r=>{
     const due = new Date(r.date);
     const daysLeft = Math.round((due-today)/86400000);
-    return `<tr><td><div class="lib-name">${r.branch}</div><div class="lib-city">${r.city||''}</div></td><td>${fmtDate(r.date)}</td><td>${daysLeft >= 0 ? daysLeft+' dagen' : 'te laat'}</td></tr>`;
+    return `<tr><td><div class="lib-name">${libLink(r.b)}</div><div class="lib-city">${esc(r.city)}</div></td><td>${fmtDate(r.date)}</td><td>${daysLeft >= 0 ? daysLeft+' dagen' : 'te laat'}</td></tr>`;
   }).join('');
 }
 

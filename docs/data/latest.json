@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-10-28T10:53:22+00:00",
+  "fetched_at": "2026-10-29T11:10:25+00:00",
   "book": {
     "title": "Onderweg",
     "author": "Evelyn Vancauwenberghe",
@@ -11,7 +11,7 @@
   "network": {
     "total_copies": 8,
     "available_copies": 0,
-    "processing_copies": 3,
+    "processing_copies": 2,
     "branch_count": 8
   },
   "branches": [
@@ -241,22 +241,22 @@
       },
       "total_copies": 1,
       "available_copies": 0,
-      "on_loan_copies": 0,
+      "on_loan_copies": 1,
       "reserved_copies": 0,
-      "processing_copies": 1,
+      "processing_copies": 0,
       "items": [
         {
           "item_id": "33999037",
           "wiseid": "5074229",
           "available": false,
-          "state": "processing",
-          "status_code": "notavailable",
-          "status_label": "Niet beschikbaar",
+          "state": "loaned",
+          "status_code": "loanedout",
+          "status_label": "Uitgeleend",
           "count": 1,
           "shelfmark": "VANC",
           "location_in_branch": "WAAR GEBEURD (verhalend)",
           "received_date": "2026-10-20",
-          "return_date": null
+          "return_date": "2026-11-26"
         }
       ]
     },

@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-11-07T09:39:41+00:00",
+  "fetched_at": "2026-11-07T11:24:14+00:00",
   "book": {
     "title": "Onderweg",
     "author": "Evelyn Vancauwenberghe",
@@ -10,7 +10,7 @@
   },
   "network": {
     "total_copies": 9,
-    "available_copies": 0,
+    "available_copies": 1,
     "processing_copies": 3,
     "branch_count": 9
   },
@@ -205,23 +205,23 @@
         "city": "NAZARETH-DE PINTE"
       },
       "total_copies": 1,
-      "available_copies": 0,
-      "on_loan_copies": 1,
+      "available_copies": 1,
+      "on_loan_copies": 0,
       "reserved_copies": 0,
       "processing_copies": 0,
       "items": [
         {
           "item_id": "33947397",
           "wiseid": "5074229",
-          "available": false,
-          "state": "loaned",
-          "status_code": "loanedout",
-          "status_label": "Uitgeleend",
+          "available": true,
+          "state": "available",
+          "status_code": "none",
+          "status_label": "Net binnen",
           "count": 1,
           "shelfmark": "VANC",
           "location_in_branch": "Nieuwe aanwinsten 2026",
           "received_date": "2026-10-08",
-          "return_date": "2026-11-26"
+          "return_date": null
         }
       ]
     },

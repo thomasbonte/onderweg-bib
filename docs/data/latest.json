@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-11-06T12:34:58+00:00",
+  "fetched_at": "2026-11-07T09:39:41+00:00",
   "book": {
     "title": "Onderweg",
     "author": "Evelyn Vancauwenberghe",
@@ -9,12 +9,47 @@
     "detail_page": "https://www.bibliotheek.be/catalogus?itemid=|library/marc/vlacc|10579988"
   },
   "network": {
-    "total_copies": 8,
+    "total_copies": 9,
     "available_copies": 0,
-    "processing_copies": 2,
-    "branch_count": 8
+    "processing_copies": 3,
+    "branch_count": 9
   },
   "branches": [
+    {
+      "city": "Deinze",
+      "branch_name": "Bibliotheek Deinze",
+      "branch_id": "/root/bibnet/Oost-Vlaanderen/Deinze/Deinze",
+      "wise_branch_id": "3450",
+      "latitude": 50.98451,
+      "longitude": 3.527379,
+      "url": "https://deinze.bibliotheek.be/location/root/bibnet/Oost-Vlaanderen/Deinze/Deinze",
+      "address": {
+        "street": "Brielstraat",
+        "number": "25 Bus0001",
+        "postcode": "9800",
+        "city": "DEINZE"
+      },
+      "total_copies": 1,
+      "available_copies": 0,
+      "on_loan_copies": 0,
+      "reserved_copies": 0,
+      "processing_copies": 1,
+      "items": [
+        {
+          "item_id": "34089667",
+          "wiseid": "5074229",
+          "available": false,
+          "state": "processing",
+          "status_code": "notavailable",
+          "status_label": "Niet beschikbaar",
+          "count": 1,
+          "shelfmark": "VANC",
+          "location_in_branch": "Nieuwe romans",
+          "received_date": "2026-11-06",
+          "return_date": null
+        }
+      ]
+    },
     {
       "city": "Evergem",
       "branch_name": "Bibliotheek Evergem",

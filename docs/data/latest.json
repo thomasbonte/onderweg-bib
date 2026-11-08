@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-11-07T11:24:14+00:00",
+  "fetched_at": "2026-11-08T11:35:46+00:00",
   "book": {
     "title": "Onderweg",
     "author": "Evelyn Vancauwenberghe",
@@ -216,7 +216,7 @@
           "available": true,
           "state": "available",
           "status_code": "none",
-          "status_label": "Net binnen",
+          "status_label": "Aanwezig",
           "count": 1,
           "shelfmark": "VANC",
           "location_in_branch": "Nieuwe aanwinsten 2026",

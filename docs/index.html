@@ -351,7 +351,7 @@
       </div>
       <div class="empty-state" id="popEmpty" style="display:none;">Nog geen bibliotheek met een uitleenbaar exemplaar.</div>
       <div class="pop-note">
-        Een uitlening is een exemplaar dat van "beschikbaar" (of "in verwerking") naar "uitgeleend" of "gereserveerd" gaat; een gereserveerd exemplaar telt dus als uitgeleend. Uitleningen die al bezig waren bij de start van de tracking tellen niet mee, omdat de startdatum dan onbekend is. Bij "begin tracking" is de eerste gevolgde dag het startpunt, niet noodzakelijk de dag dat het boek er uitleenbaar werd.
+        Een uitlening is een exemplaar dat van "beschikbaar" (of "in verwerking") naar "uitgeleend" of "gereserveerd" gaat; een gereserveerd exemplaar telt dus als uitgeleend, en een reservatie die daarna wordt afgehaald blijft dezelfde uitlening. Een uitlening die al bezig was toen het exemplaar voor het eerst werd gezien, telt mee als één uitlening. Verlengingen tellen niet als nieuwe uitlening. Bij "begin tracking" is de eerste gevolgde dag het startpunt, niet noodzakelijk de dag dat het boek er uitleenbaar werd.
       </div>
     </div></div>
   </section>
@@ -512,9 +512,11 @@ function dayDiff(a, b){
 //  - availDays: copy-days lendable since `start`. A snapshot's state holds
 //               until the next snapshot, and the latest snapshot counts 1 day.
 //  - outDays:   those days on which the copy was loaned or reserved.
-//  - loans:     observed transitions from not-out to out (available or
-//               processing -> loaned/reserved). Copies already out at the first
-//               sighting are not counted: we don't know when that loan began.
+//  - loans:     one per loan period: a switch from not-out to out (available or
+//               processing -> loaned/reserved), plus a copy that is already out
+//               when it is first seen (that loan began before tracking, but it
+//               is still one loan). reserved -> loaned and renewals (new return
+//               date, still loaned) continue the same loan and are not counted.
 function computePopularity(snapshots){
   const days = dailySnapshots(snapshots);
   const stats = {};
@@ -531,7 +533,7 @@ function computePopularity(snapshots){
         const out = state === 'loaned' || state === 'reserved';
         const lendable = out || state === 'available';
         const k = key + '|' + it.item_id;
-        if (k in prevOut && !prevOut[k] && out) st.loans++;
+        if (out && (!(k in prevOut) || !prevOut[k])) st.loans++;
         prevOut[k] = out;
         if (lendable){
           if (st.start === null) st.start = day;

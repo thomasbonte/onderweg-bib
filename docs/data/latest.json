@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-10-11T11:04:45+00:00",
+  "fetched_at": "2026-11-10T13:07:16+00:00",
   "book": {
     "title": "Onderweg",
     "author": "Evelyn Vancauwenberghe",
@@ -9,12 +9,47 @@
     "detail_page": "https://www.bibliotheek.be/catalogus?itemid=|library/marc/vlacc|10579988"
   },
   "network": {
-    "total_copies": 7,
-    "available_copies": 1,
-    "processing_copies": 3,
-    "branch_count": 7
+    "total_copies": 9,
+    "available_copies": 2,
+    "processing_copies": 2,
+    "branch_count": 9
   },
   "branches": [
+    {
+      "city": "Deinze",
+      "branch_name": "Bibliotheek Deinze",
+      "branch_id": "/root/bibnet/Oost-Vlaanderen/Deinze/Deinze",
+      "wise_branch_id": "3450",
+      "latitude": 50.98451,
+      "longitude": 3.527379,
+      "url": "https://deinze.bibliotheek.be/location/root/bibnet/Oost-Vlaanderen/Deinze/Deinze",
+      "address": {
+        "street": "Brielstraat",
+        "number": "25 Bus0001",
+        "postcode": "9800",
+        "city": "DEINZE"
+      },
+      "total_copies": 1,
+      "available_copies": 0,
+      "on_loan_copies": 0,
+      "reserved_copies": 0,
+      "processing_copies": 1,
+      "items": [
+        {
+          "item_id": "34089667",
+          "wiseid": "5074229",
+          "available": false,
+          "state": "processing",
+          "status_code": "notavailable",
+          "status_label": "Niet beschikbaar",
+          "count": 1,
+          "shelfmark": "VANC",
+          "location_in_branch": "Nieuwe romans",
+          "received_date": "2026-11-06",
+          "return_date": null
+        }
+      ]
+    },
     {
       "city": "Evergem",
       "branch_name": "Bibliotheek Evergem",
@@ -46,7 +81,7 @@
           "shelfmark": "VANC",
           "location_in_branch": "Volwassenen fictie waargebeurd",
           "received_date": "2026-09-11",
-          "return_date": "2026-11-04"
+          "return_date": "2026-11-17"
         }
       ]
     },
@@ -81,7 +116,7 @@
           "shelfmark": "VANC",
           "location_in_branch": "1ste verdieping Waargebeurd [kast 25], alfabetisch op",
           "received_date": "2026-07-28",
-          "return_date": "2026-10-27"
+          "return_date": "2026-11-27"
         }
       ]
     },
@@ -100,23 +135,23 @@
         "city": "GENT"
       },
       "total_copies": 1,
-      "available_copies": 1,
-      "on_loan_copies": 0,
+      "available_copies": 0,
+      "on_loan_copies": 1,
       "reserved_copies": 0,
       "processing_copies": 0,
       "items": [
         {
           "item_id": "33508215",
           "wiseid": "5074229",
-          "available": true,
-          "state": "available",
-          "status_code": "none",
-          "status_label": "Aanwezig",
+          "available": false,
+          "state": "loaned",
+          "status_code": "loanedout",
+          "status_label": "Uitgeleend",
           "count": 1,
           "shelfmark": "VANC",
           "location_in_branch": "Waargebeurd, alfabetisch op",
           "received_date": "2026-08-04",
-          "return_date": null
+          "return_date": "2026-11-24"
         }
       ]
     },
@@ -151,7 +186,7 @@
           "shelfmark": "VANC",
           "location_in_branch": "Waargebeurd, alfabetisch op",
           "received_date": "2026-04-08",
-          "return_date": "2026-10-28"
+          "return_date": "2026-11-25"
         }
       ]
     },
@@ -170,18 +205,18 @@
         "city": "NAZARETH-DE PINTE"
       },
       "total_copies": 1,
-      "available_copies": 0,
+      "available_copies": 1,
       "on_loan_copies": 0,
       "reserved_copies": 0,
-      "processing_copies": 1,
+      "processing_copies": 0,
       "items": [
         {
           "item_id": "33947397",
           "wiseid": "5074229",
-          "available": false,
-          "state": "processing",
-          "status_code": "notavailable",
-          "status_label": "Niet beschikbaar",
+          "available": true,
+          "state": "available",
+          "status_code": "none",
+          "status_label": "Aanwezig",
           "count": 1,
           "shelfmark": "VANC",
           "location_in_branch": "Nieuwe aanwinsten 2026",
@@ -205,23 +240,58 @@
         "city": "SINT-MARTENS-LATEM"
       },
       "total_copies": 1,
-      "available_copies": 0,
+      "available_copies": 1,
       "on_loan_copies": 0,
       "reserved_copies": 0,
-      "processing_copies": 1,
+      "processing_copies": 0,
       "items": [
         {
           "item_id": "33912171",
           "wiseid": "5074229",
-          "available": false,
-          "state": "processing",
-          "status_code": "notavailable",
-          "status_label": "Niet beschikbaar",
+          "available": true,
+          "state": "available",
+          "status_code": "none",
+          "status_label": "Net binnen",
           "count": 1,
           "shelfmark": "VANC",
           "location_in_branch": "Nieuw fictie 2026",
           "received_date": "2026-10-01",
           "return_date": null
+        }
+      ]
+    },
+    {
+      "city": "Brugge",
+      "branch_name": "Hoofdbibliotheek Biekorf",
+      "branch_id": "/root/bibnet/West-Vlaanderen/Brugge/Hoofdbibliotheek Biekorf",
+      "wise_branch_id": "4080",
+      "latitude": 51.209929,
+      "longitude": 3.222717,
+      "url": "http://brugge.bibliotheek.be/location/root/bibnet/West-Vlaanderen/Brugge/Hoofdbibliotheek Biekorf",
+      "address": {
+        "street": "Kuipersstraat",
+        "number": "3",
+        "postcode": "8000",
+        "city": "BRUGGE"
+      },
+      "total_copies": 1,
+      "available_copies": 0,
+      "on_loan_copies": 1,
+      "reserved_copies": 0,
+      "processing_copies": 0,
+      "items": [
+        {
+          "item_id": "33999037",
+          "wiseid": "5074229",
+          "available": false,
+          "state": "loaned",
+          "status_code": "loanedout",
+          "status_label": "Uitgeleend",
+          "count": 1,
+          "shelfmark": "VANC",
+          "location_in_branch": "WAAR GEBEURD (verhalend)",
+          "received_date": "2026-10-20",
+          "return_date": "2026-12-01"
         }
       ]
     },

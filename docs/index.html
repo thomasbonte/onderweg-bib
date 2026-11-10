@@ -176,6 +176,27 @@
   a.lib-link:hover{ color: var(--rust); border-bottom-color: var(--rust); }
   .lib-city{ color: var(--ink-soft); font-size: 0.85rem; }
 
+  /* Populariteit */
+  .sort-bar{ display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-bottom:14px; font-size:0.82rem; color: var(--ink-soft); }
+  .sort-bar button{
+    font: inherit; font-weight:600; color: var(--ink);
+    background: transparent; border: 1px solid var(--line-strong);
+    padding: 5px 12px; border-radius: 3px; cursor: pointer;
+  }
+  .sort-bar button:hover{ border-color: var(--rust); color: var(--rust); }
+  .sort-bar button.active{ background: var(--teal); border-color: var(--teal); color: var(--sand-light); }
+  .table-scroll{ overflow-x:auto; }
+  #popTable td.num, #popTable th.num{ text-align:right; white-space:nowrap; }
+  #popTable td.rank{ font-family:'Lora', serif; font-size:1.15rem; font-weight:700; color: var(--rust); width:2.2em; }
+  .metric-cell{ min-width: 110px; }
+  .metric-cell .bar{ height:5px; background: var(--card-line); margin-top:5px; border-radius:2px; overflow:hidden; }
+  .metric-cell .bar span{ display:block; height:100%; background: var(--teal); }
+  .metric-cell.pct .bar span{ background: var(--rust); }
+  .sort-col{ background: rgba(215,155,62,0.12); }
+  .muted-row td{ color: var(--ink-soft); font-size:0.85rem; }
+  .few-data{ color: var(--ochre); font-size:0.74rem; font-weight:600; }
+  .pop-note{ margin-top:12px; font-size:0.78rem; color: var(--ink-soft); line-height:1.5; }
+
   .empty-state{
     padding: 28px 20px;
     text-align:center;
@@ -301,6 +322,36 @@
         <span><span class="swatch cell-loaned"></span>Uitgeleend</span>
         <span><span class="swatch cell-reserved"></span>Gereserveerd, geen vrij exemplaar</span>
         <span><span class="swatch cell-processing"></span>Niet beschikbaar (in verwerking)</span>
+      </div>
+    </div></div>
+  </section>
+
+  <section>
+    <h3>Populariteit per bibliotheek</h3>
+    <div class="desc">Rangschikking van de bibliotheken op basis van hoe vaak dit boek werd uitgeleend en hoe vaak het uit de kast is. Een bibliotheek telt pas mee vanaf de dag dat het boek er uitleenbaar werd; dagen in verwerking ("niet beschikbaar") tellen niet mee.</div>
+    <div class="card"><div class="card-inner">
+      <div class="sort-bar" id="popSort">
+        <span>Rangschik op:</span>
+        <button type="button" data-sort="loans" class="active">Aantal uitleningen</button>
+        <button type="button" data-sort="rate">Uitleningen per 30 dagen</button>
+        <button type="button" data-sort="pct">% dagen uitgeleend</button>
+      </div>
+      <div class="table-scroll">
+        <table id="popTable">
+          <thead><tr>
+            <th>#</th><th>Bibliotheek</th><th>Uitleenbaar sinds</th>
+            <th class="num">Dagen uitleenbaar</th>
+            <th data-col="loans">Uitleningen</th>
+            <th class="num" data-col="rate">Per 30 dagen</th>
+            <th class="num">Dagen uitgeleend</th>
+            <th data-col="pct">% dagen uitgeleend</th>
+          </tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div class="empty-state" id="popEmpty" style="display:none;">Nog geen bibliotheek met een uitleenbaar exemplaar.</div>
+      <div class="pop-note">
+        Een uitlening is een exemplaar dat van "beschikbaar" (of "in verwerking") naar "uitgeleend" of "gereserveerd" gaat; een gereserveerd exemplaar telt dus als uitgeleend. Uitleningen die al bezig waren bij de start van de tracking tellen niet mee, omdat de startdatum dan onbekend is. Bij "begin tracking" is de eerste gevolgde dag het startpunt, niet noodzakelijk de dag dat het boek er uitleenbaar werd.
       </div>
     </div></div>
   </section>
@@ -442,6 +493,124 @@ function detectEvents(snapshots){
     }
   }
   return events;
+}
+
+// ---- Populariteit per bibliotheek ----------------------------------------
+// One snapshot per day (the last one wins when the crawl ran more than once).
+function dailySnapshots(snapshots){
+  const byDay = new Map();
+  for (const s of snapshots) byDay.set(s.fetched_at.slice(0,10), s);
+  return [...byDay.entries()].sort((a,b)=> a[0].localeCompare(b[0]));
+}
+function dayDiff(a, b){
+  return Math.round((Date.parse(b+'T00:00:00Z') - Date.parse(a+'T00:00:00Z')) / 86400000);
+}
+
+// Per branch:
+//  - start:     first day a copy was lendable (available, loaned or reserved);
+//               days in 'processing' (niet beschikbaar) never count.
+//  - availDays: copy-days lendable since `start`. A snapshot's state holds
+//               until the next snapshot, and the latest snapshot counts 1 day.
+//  - outDays:   those days on which the copy was loaned or reserved.
+//  - loans:     observed transitions from not-out to out (available or
+//               processing -> loaned/reserved). Copies already out at the first
+//               sighting are not counted: we don't know when that loan began.
+function computePopularity(snapshots){
+  const days = dailySnapshots(snapshots);
+  const stats = {};
+  const prevOut = {}; // branch|item -> was out in the previous snapshot
+  for (let i = 0; i < days.length; i++){
+    const [day, snap] = days[i];
+    const span = i + 1 < days.length ? dayDiff(day, days[i+1][0]) : 1;
+    for (const b of snap.branches){
+      const key = branchKey(b);
+      const st = stats[key] || (stats[key] = { meta: b, loans: 0, availDays: 0, outDays: 0, start: null });
+      st.meta = b;
+      for (const it of b.items){
+        const state = itemState(it);
+        const out = state === 'loaned' || state === 'reserved';
+        const lendable = out || state === 'available';
+        const k = key + '|' + it.item_id;
+        if (k in prevOut && !prevOut[k] && out) st.loans++;
+        prevOut[k] = out;
+        if (lendable){
+          if (st.start === null) st.start = day;
+          st.availDays += span;
+          if (out) st.outDays += span;
+        }
+      }
+    }
+  }
+  const firstDay = days.length ? days[0][0] : null;
+  return Object.values(stats).map(st => ({
+    ...st,
+    firstDay,
+    rate: st.availDays ? st.loans / st.availDays * 30 : null,
+    pct: st.availDays ? st.outDays / st.availDays : null,
+  }));
+}
+
+let popStats = [];
+let popSort = 'loans';
+
+function renderPopularity(){
+  const tbody = document.querySelector('#popTable tbody');
+  const ranked = popStats.filter(s => s.start !== null);
+  const waiting = popStats.filter(s => s.start === null);
+  const empty = document.getElementById('popEmpty');
+  if (!ranked.length){
+    tbody.innerHTML = '';
+    empty.style.display = 'block';
+  } else {
+    empty.style.display = 'none';
+  }
+
+  // Sort on the chosen metric; ties fall back on the other metrics, then name.
+  const order = { loans: ['loans','rate','pct'], rate: ['rate','pct','loans'], pct: ['pct','loans','rate'] }[popSort];
+  ranked.sort((a,b)=>{
+    for (const m of order){
+      const d = (b[m] ?? -1) - (a[m] ?? -1);
+      if (Math.abs(d) > 1e-9) return d;
+    }
+    return a.meta.branch_name.localeCompare(b.meta.branch_name);
+  });
+  const val = s => s[popSort] ?? -1;
+  const maxLoans = Math.max(1, ...ranked.map(s => s.loans));
+  const nf = new Intl.NumberFormat('nl-BE', { maximumFractionDigits: 1 });
+  const col = m => m === popSort ? ' sort-col' : '';
+
+  let html = ranked.map(s=>{
+    const rank = 1 + ranked.filter(o => Math.abs(val(o) - val(s)) > 1e-9 && val(o) > val(s)).length;
+    const fromStart = s.start === s.firstDay;
+    const few = s.availDays < 14 ? ` <span class="few-data" title="Pas ${s.availDays} dagen uitleenbaar gevolgd: vergelijk voorzichtig">weinig data</span>` : '';
+    return `<tr>
+      <td class="rank">${rank}</td>
+      <td><div class="lib-name">${libLink(s.meta)}</div><div class="lib-city">${esc(s.meta.city)}${few}</div></td>
+      <td>${fmtDate(s.start)}${fromStart ? '<div class="lib-city">begin tracking</div>' : ''}</td>
+      <td class="num">${s.availDays}</td>
+      <td class="metric-cell${col('loans')}"><strong>${s.loans}</strong><div class="bar"><span style="width:${Math.round(100*s.loans/maxLoans)}%"></span></div></td>
+      <td class="num${col('rate')}">${nf.format(s.rate)}</td>
+      <td class="num">${s.outDays}</td>
+      <td class="metric-cell pct${col('pct')}"><strong>${Math.round(100*s.pct)}%</strong><div class="bar"><span style="width:${Math.round(100*s.pct)}%"></span></div></td>
+    </tr>`;
+  }).join('');
+
+  if (waiting.length){
+    html += waiting
+      .sort((a,b)=> a.meta.branch_name.localeCompare(b.meta.branch_name))
+      .map(s => `<tr class="muted-row"><td>–</td><td><div class="lib-name">${libLink(s.meta)}</div><div class="lib-city">${esc(s.meta.city)}</div></td><td colspan="6">Nog in verwerking, nog niet uitleenbaar</td></tr>`)
+      .join('');
+  }
+  tbody.innerHTML = html;
+  document.querySelectorAll('#popSort button').forEach(btn => btn.classList.toggle('active', btn.dataset.sort === popSort));
+}
+
+function initPopularity(snapshots){
+  popStats = computePopularity(snapshots);
+  document.querySelectorAll('#popSort button').forEach(btn => {
+    btn.addEventListener('click', () => { popSort = btn.dataset.sort; renderPopularity(); });
+  });
+  renderPopularity();
 }
 
 function renderHeader(latest){
@@ -685,6 +854,7 @@ async function main(){
   renderReservationChart(branchIndex, snapshots);
   renderWeekdayChart(events);
   renderHeatmap(branchIndex, snapshots);
+  initPopularity(snapshots);
   renderAlerts(snapshots);
   renderReturnsTable(latest);
 }

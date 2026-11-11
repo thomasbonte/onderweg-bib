@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-11-10T13:07:16+00:00",
+  "fetched_at": "2026-11-11T12:17:00+00:00",
   "book": {
     "title": "Onderweg",
     "author": "Evelyn Vancauwenberghe",
@@ -10,7 +10,7 @@
   },
   "network": {
     "total_copies": 9,
-    "available_copies": 2,
+    "available_copies": 1,
     "processing_copies": 2,
     "branch_count": 9
   },
@@ -240,23 +240,23 @@
         "city": "SINT-MARTENS-LATEM"
       },
       "total_copies": 1,
-      "available_copies": 1,
-      "on_loan_copies": 0,
+      "available_copies": 0,
+      "on_loan_copies": 1,
       "reserved_copies": 0,
       "processing_copies": 0,
       "items": [
         {
           "item_id": "33912171",
           "wiseid": "5074229",
-          "available": true,
-          "state": "available",
-          "status_code": "none",
-          "status_label": "Net binnen",
+          "available": false,
+          "state": "loaned",
+          "status_code": "loanedout",
+          "status_label": "Uitgeleend",
           "count": 1,
           "shelfmark": "VANC",
           "location_in_branch": "Nieuw fictie 2026",
           "received_date": "2026-10-01",
-          "return_date": null
+          "return_date": "2026-12-09"
         }
       ]
     },

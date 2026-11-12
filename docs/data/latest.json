@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-11-11T12:17:00+00:00",
+  "fetched_at": "2026-11-12T13:25:49+00:00",
   "book": {
     "title": "Onderweg",
     "author": "Evelyn Vancauwenberghe",
@@ -9,12 +9,82 @@
     "detail_page": "https://www.bibliotheek.be/catalogus?itemid=|library/marc/vlacc|10579988"
   },
   "network": {
-    "total_copies": 9,
-    "available_copies": 1,
+    "total_copies": 11,
+    "available_copies": 2,
     "processing_copies": 2,
-    "branch_count": 9
+    "branch_count": 11
   },
   "branches": [
+    {
+      "city": "Mol",
+      "branch_name": "Bibliotheek Mol",
+      "branch_id": "/root/bibnet/Antwerpen/Mol/Bib Mol",
+      "wise_branch_id": "7430",
+      "latitude": 51.186749,
+      "longitude": 5.121298,
+      "url": "https://mol.bibliotheek.be/location/root/bibnet/Antwerpen/Mol/Bib Mol",
+      "address": {
+        "street": "Molenhoekstraat",
+        "number": "2",
+        "postcode": "2400",
+        "city": "MOL"
+      },
+      "total_copies": 1,
+      "available_copies": 0,
+      "on_loan_copies": 0,
+      "reserved_copies": 1,
+      "processing_copies": 0,
+      "items": [
+        {
+          "item_id": "34102382",
+          "wiseid": "5074229",
+          "available": false,
+          "state": "reserved",
+          "status_code": "hasreservation",
+          "status_label": "Gereserveerd",
+          "count": 1,
+          "shelfmark": "VANC",
+          "location_in_branch": "Volwassenen : roman",
+          "received_date": "2026-11-10",
+          "return_date": null
+        }
+      ]
+    },
+    {
+      "city": "Brussel",
+      "branch_name": "Muntpunt",
+      "branch_id": "/root/bibnet/Brussel/Muntpunt",
+      "wise_branch_id": "5080",
+      "latitude": 50.849463,
+      "longitude": 4.353501,
+      "url": "https://muntpunt.bibliotheek.be/",
+      "address": {
+        "street": "Munt",
+        "number": "6",
+        "postcode": "1000",
+        "city": "BRUSSEL"
+      },
+      "total_copies": 1,
+      "available_copies": 1,
+      "on_loan_copies": 0,
+      "reserved_copies": 0,
+      "processing_copies": 0,
+      "items": [
+        {
+          "item_id": "34100309",
+          "wiseid": "5074229",
+          "available": true,
+          "state": "available",
+          "status_code": "none",
+          "status_label": "Net binnen",
+          "count": 1,
+          "shelfmark": "VANC",
+          "location_in_branch": "Verdieping 0 Nieuwe aanwinsten",
+          "received_date": "2026-11-10",
+          "return_date": null
+        }
+      ]
+    },
     {
       "city": "Deinze",
       "branch_name": "Bibliotheek Deinze",

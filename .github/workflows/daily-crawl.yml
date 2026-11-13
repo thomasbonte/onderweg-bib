@@ -5,7 +5,7 @@ on:
     # 06:00 in Brussels time. GitHub Actions cron is UTC, so this is
     # 04:00 UTC in summer (CEST) and 05:00 UTC in winter (CET) -
     # 05:00 UTC is a safe, simple middle ground year-round.
-    - cron: "0 5 * * *"
+    - cron: "0 15 * * *"
   workflow_dispatch: {} # lets you trigger a run manually from the Actions tab
 
 permissions:

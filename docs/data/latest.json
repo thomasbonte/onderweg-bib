@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-11-13T17:28:36+00:00",
+  "fetched_at": "2026-11-14T16:11:55+00:00",
   "book": {
     "title": "Onderweg",
     "author": "Evelyn Vancauwenberghe",
@@ -65,23 +65,23 @@
         "city": "BRUSSEL"
       },
       "total_copies": 1,
-      "available_copies": 1,
-      "on_loan_copies": 0,
+      "available_copies": 0,
+      "on_loan_copies": 1,
       "reserved_copies": 0,
       "processing_copies": 0,
       "items": [
         {
           "item_id": "34100309",
           "wiseid": "5074229",
-          "available": true,
-          "state": "available",
-          "status_code": "none",
-          "status_label": "Aanwezig",
+          "available": false,
+          "state": "loaned",
+          "status_code": "loanedout",
+          "status_label": "Uitgeleend",
           "count": 1,
           "shelfmark": "VANC",
           "location_in_branch": "Verdieping 0 Nieuwe aanwinsten",
           "received_date": "2026-11-10",
-          "return_date": null
+          "return_date": "2026-12-05"
         }
       ]
     },
@@ -136,22 +136,22 @@
       },
       "total_copies": 1,
       "available_copies": 0,
-      "on_loan_copies": 1,
-      "reserved_copies": 0,
+      "on_loan_copies": 0,
+      "reserved_copies": 1,
       "processing_copies": 0,
       "items": [
         {
           "item_id": "33823598",
           "wiseid": "5074229",
           "available": false,
-          "state": "loaned",
-          "status_code": "loanedout",
-          "status_label": "Uitgeleend",
+          "state": "reserved",
+          "status_code": "hasreservation",
+          "status_label": "Gereserveerd",
           "count": 1,
           "shelfmark": "VANC",
           "location_in_branch": "Volwassenen fictie waargebeurd",
           "received_date": "2026-09-11",
-          "return_date": "2026-11-17"
+          "return_date": null
         }
       ]
     },
@@ -205,23 +205,23 @@
         "city": "GENT"
       },
       "total_copies": 1,
-      "available_copies": 0,
-      "on_loan_copies": 1,
+      "available_copies": 1,
+      "on_loan_copies": 0,
       "reserved_copies": 0,
       "processing_copies": 0,
       "items": [
         {
           "item_id": "33508215",
           "wiseid": "5074229",
-          "available": false,
-          "state": "loaned",
-          "status_code": "loanedout",
-          "status_label": "Uitgeleend",
+          "available": true,
+          "state": "available",
+          "status_code": "none",
+          "status_label": "Aanwezig",
           "count": 1,
           "shelfmark": "VANC",
           "location_in_branch": "Waargebeurd, alfabetisch op",
           "received_date": "2026-08-04",
-          "return_date": "2026-11-24"
+          "return_date": null
         }
       ]
     },
@@ -321,7 +321,7 @@
           "available": true,
           "state": "available",
           "status_code": "none",
-          "status_label": "Net binnen",
+          "status_label": "Aanwezig",
           "count": 1,
           "shelfmark": "VANC",
           "location_in_branch": "Nieuw fictie 2026",
@@ -391,7 +391,7 @@
           "available": true,
           "state": "available",
           "status_code": "none",
-          "status_label": "Net binnen",
+          "status_label": "Aanwezig",
           "count": 1,
           "shelfmark": "VANC",
           "location_in_branch": "ROMANS NEDERLANDSTALIG",

@@ -18,12 +18,20 @@ secret (see README.md).
 import json
 import os
 import sys
+import time
+import urllib.error
 import urllib.request
 import xml.etree.ElementTree as ET
 from datetime import datetime, timezone
 from pathlib import Path
 
 AVAILABILITY_URL = os.environ.get("AVAILABILITY_URL")
+
+# The feed occasionally answers with well-formed XML that holds no book and no
+# libraries. Such a response is never saved: the crawl retries, and if it still
+# fails the run ends with an error so no empty snapshot reaches the history.
+MAX_ATTEMPTS = int(os.environ.get("CRAWL_ATTEMPTS", "3"))
+RETRY_DELAY_SECONDS = float(os.environ.get("CRAWL_RETRY_DELAY", "60"))
 
 ROOT = Path(__file__).resolve().parent
 DATA_DIR = ROOT / "docs" / "data"
@@ -55,6 +63,8 @@ def parse_date_ddmmyyyy(value):
 #   reserved    - on hold for someone (not lent out, not free)
 #   processing  - "Niet beschikbaar": owned by the library but still being
 #                 processed (not yet available for lending)
+#   ordered     - "In bestelling": ordered by the library, not in the building
+#                 yet, so not lendable
 #   other       - anything we don't recognise (logged as a warning)
 KNOWN_STATUS_CODES = {
     "none": "available",
@@ -66,6 +76,8 @@ KNOWN_STATUS_CODES = {
 # matched by the label check below.
 PROCESSING_STATUS_CODES = {"notavailable", "inprocess", "processing", "inprocessing"}
 PROCESSING_LABELS = ("niet beschikbaar", "in verwerking", "in behandeling")
+ORDERED_STATUS_CODES = {"onorder", "ordered", "inorder"}
+ORDERED_LABELS = ("in bestelling", "besteld")
 
 
 def classify_item(available, status_code, status_label):
@@ -75,6 +87,8 @@ def classify_item(available, status_code, status_label):
         return "available"
     if code in PROCESSING_STATUS_CODES or any(p in label for p in PROCESSING_LABELS):
         return "processing"
+    if code in ORDERED_STATUS_CODES or any(p in label for p in ORDERED_LABELS):
+        return "ordered"
     if code in KNOWN_STATUS_CODES:
         return KNOWN_STATUS_CODES[code]
     return "other"
@@ -152,6 +166,7 @@ def extract_branch(branch_elem, holding_elem, city_name):
     on_loan_copies = copies("loaned")
     reserved_copies = copies("reserved")
     processing_copies = copies("processing")
+    ordered_copies = copies("ordered")
 
     address_elem = holding_elem.find("address")
     address = None
@@ -185,6 +200,7 @@ def extract_branch(branch_elem, holding_elem, city_name):
         "on_loan_copies": on_loan_copies,
         "reserved_copies": reserved_copies,
         "processing_copies": processing_copies,
+        "ordered_copies": ordered_copies,
         "items": items,
     }
 
@@ -211,10 +227,48 @@ def parse_snapshot(xml_text: str) -> dict:
             "total_copies": sum(b["total_copies"] for b in branches),
             "available_copies": sum(b["available_copies"] for b in branches),
             "processing_copies": sum(b["processing_copies"] for b in branches),
+            "ordered_copies": sum(b["ordered_copies"] for b in branches),
             "branch_count": len(branches),
         },
         "branches": branches,
     }
+
+
+def validate_snapshot(snapshot: dict):
+    """Return a description of what is wrong with the snapshot, or None if it
+    looks like a real answer for a book that libraries hold."""
+    if not snapshot["book"]["title"] and not snapshot["book"]["id"]:
+        return "the response contains no book record"
+    if not snapshot["branches"]:
+        return "the response lists no libraries"
+    return None
+
+
+def fetch_valid_snapshot(url: str):
+    """Fetch and parse the feed, retrying transient failures. Returns
+    (snapshot, None) on success or (None, last_error_message)."""
+    last_error = "unknown error"
+    for attempt in range(1, MAX_ATTEMPTS + 1):
+        xml_text = None
+        try:
+            xml_text = fetch_xml(url)
+            snapshot = parse_snapshot(xml_text)
+            problem = validate_snapshot(snapshot)
+            if problem is None:
+                return snapshot, None
+            last_error = problem
+        except (urllib.error.URLError, TimeoutError, ET.ParseError) as exc:
+            last_error = f"{type(exc).__name__}: {exc}"
+        print(
+            f"Attempt {attempt}/{MAX_ATTEMPTS} failed: {last_error}",
+            file=sys.stderr,
+        )
+        if xml_text is not None:
+            # A short excerpt helps to see what the server actually sent.
+            print(f"Response excerpt: {xml_text[:500]!r}", file=sys.stderr)
+        if attempt < MAX_ATTEMPTS:
+            time.sleep(RETRY_DELAY_SECONDS)
+    return None, last_error
 
 
 def main():
@@ -222,8 +276,12 @@ def main():
         print("ERROR: set the AVAILABILITY_URL environment variable", file=sys.stderr)
         sys.exit(1)
 
-    xml_text = fetch_xml(AVAILABILITY_URL)
-    snapshot = parse_snapshot(xml_text)
+    snapshot, error = fetch_valid_snapshot(AVAILABILITY_URL)
+    if snapshot is None:
+        # Nothing is written, and the non-zero exit makes the workflow stop
+        # before its commit step, so history.jsonl and latest.json stay intact.
+        print(f"::error::No snapshot saved: {error}", file=sys.stderr)
+        sys.exit(1)
 
     DATA_DIR.mkdir(parents=True, exist_ok=True)
     with HISTORY_FILE.open("a", encoding="utf-8") as f:

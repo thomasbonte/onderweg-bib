@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-11-18T22:25:18+00:00",
+  "fetched_at": "2026-11-19T22:30:20+00:00",
   "book": {
     "title": "Onderweg",
     "author": "Evelyn Vancauwenberghe",
@@ -32,8 +32,8 @@
       },
       "total_copies": 1,
       "available_copies": 0,
-      "on_loan_copies": 0,
-      "reserved_copies": 1,
+      "on_loan_copies": 1,
+      "reserved_copies": 0,
       "processing_copies": 0,
       "ordered_copies": 0,
       "items": [
@@ -41,14 +41,14 @@
           "item_id": "34102382",
           "wiseid": "5074229",
           "available": false,
-          "state": "reserved",
-          "status_code": "hasreservation",
-          "status_label": "Gereserveerd",
+          "state": "loaned",
+          "status_code": "loanedout",
+          "status_label": "Uitgeleend",
           "count": 1,
           "shelfmark": "VANC",
           "location_in_branch": "Volwassenen : roman",
           "received_date": "2026-11-10",
-          "return_date": null
+          "return_date": "2026-12-17"
         }
       ]
     },
@@ -140,8 +140,8 @@
       },
       "total_copies": 1,
       "available_copies": 0,
-      "on_loan_copies": 0,
-      "reserved_copies": 1,
+      "on_loan_copies": 1,
+      "reserved_copies": 0,
       "processing_copies": 0,
       "ordered_copies": 0,
       "items": [
@@ -149,14 +149,14 @@
           "item_id": "33823598",
           "wiseid": "5074229",
           "available": false,
-          "state": "reserved",
-          "status_code": "hasreservation",
-          "status_label": "Gereserveerd",
+          "state": "loaned",
+          "status_code": "loanedout",
+          "status_label": "Uitgeleend",
           "count": 1,
           "shelfmark": "VANC",
           "location_in_branch": "Volwassenen fictie waargebeurd",
           "received_date": "2026-09-11",
-          "return_date": null
+          "return_date": "2026-12-17"
         }
       ]
     },

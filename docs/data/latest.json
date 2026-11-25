@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-11-24T23:41:10+00:00",
+  "fetched_at": "2026-11-25T23:24:51+00:00",
   "book": {
     "title": "Onderweg",
     "author": "Evelyn Vancauwenberghe",
@@ -9,11 +9,11 @@
     "detail_page": "https://www.bibliotheek.be/catalogus?itemid=|library/marc/vlacc|10579988"
   },
   "network": {
-    "total_copies": 11,
-    "available_copies": 1,
+    "total_copies": 12,
+    "available_copies": 3,
     "processing_copies": 1,
-    "ordered_copies": 0,
-    "branch_count": 11
+    "ordered_copies": 1,
+    "branch_count": 12
   },
   "branches": [
     {
@@ -49,6 +49,42 @@
           "location_in_branch": "Volwassenen : roman",
           "received_date": "2026-11-10",
           "return_date": "2026-12-17"
+        }
+      ]
+    },
+    {
+      "city": "Nijlen",
+      "branch_name": "Bibliotheek Nijlen",
+      "branch_id": "/root/bibnet/Antwerpen/Nijlen",
+      "wise_branch_id": "7450",
+      "latitude": 51.160261,
+      "longitude": 4.670004,
+      "url": "https://nijlen.bibliotheek.be/",
+      "address": {
+        "street": "Kerkstraat",
+        "number": "4",
+        "postcode": "2560",
+        "city": "NIJLEN"
+      },
+      "total_copies": 1,
+      "available_copies": 0,
+      "on_loan_copies": 0,
+      "reserved_copies": 0,
+      "processing_copies": 0,
+      "ordered_copies": 1,
+      "items": [
+        {
+          "item_id": "34162137",
+          "wiseid": "5074229",
+          "available": false,
+          "state": "ordered",
+          "status_code": "onorder",
+          "status_label": "In bestelling",
+          "count": 1,
+          "shelfmark": "VANC",
+          "location_in_branch": "Volwassenen fictie",
+          "received_date": null,
+          "return_date": null
         }
       ]
     },
@@ -176,8 +212,8 @@
       },
       "total_copies": 1,
       "available_copies": 0,
-      "on_loan_copies": 1,
-      "reserved_copies": 0,
+      "on_loan_copies": 0,
+      "reserved_copies": 1,
       "processing_copies": 0,
       "ordered_copies": 0,
       "items": [
@@ -185,14 +221,14 @@
           "item_id": "33508208",
           "wiseid": "5074229",
           "available": false,
-          "state": "loaned",
-          "status_code": "loanedout",
-          "status_label": "Uitgeleend",
+          "state": "reserved",
+          "status_code": "hasreservation",
+          "status_label": "Gereserveerd",
           "count": 1,
           "shelfmark": "VANC",
           "location_in_branch": "1ste verdieping Waargebeurd [kast 25], alfabetisch op",
           "received_date": "2026-07-28",
-          "return_date": "2026-11-27"
+          "return_date": null
         }
       ]
     },
@@ -247,8 +283,8 @@
         "city": "GENT"
       },
       "total_copies": 1,
-      "available_copies": 0,
-      "on_loan_copies": 1,
+      "available_copies": 1,
+      "on_loan_copies": 0,
       "reserved_copies": 0,
       "processing_copies": 0,
       "ordered_copies": 0,
@@ -256,15 +292,15 @@
         {
           "item_id": "33159468",
           "wiseid": "5074229",
-          "available": false,
-          "state": "loaned",
-          "status_code": "loanedout",
-          "status_label": "Uitgeleend",
+          "available": true,
+          "state": "available",
+          "status_code": "none",
+          "status_label": "Aanwezig",
           "count": 1,
           "shelfmark": "VANC",
           "location_in_branch": "Waargebeurd, alfabetisch op",
           "received_date": "2026-04-08",
-          "return_date": "2026-11-25"
+          "return_date": null
         }
       ]
     },
@@ -319,8 +355,8 @@
         "city": "SINT-MARTENS-LATEM"
       },
       "total_copies": 1,
-      "available_copies": 0,
-      "on_loan_copies": 1,
+      "available_copies": 1,
+      "on_loan_copies": 0,
       "reserved_copies": 0,
       "processing_copies": 0,
       "ordered_copies": 0,
@@ -328,15 +364,15 @@
         {
           "item_id": "33912171",
           "wiseid": "5074229",
-          "available": false,
-          "state": "loaned",
-          "status_code": "loanedout",
-          "status_label": "Uitgeleend",
+          "available": true,
+          "state": "available",
+          "status_code": "none",
+          "status_label": "Net binnen",
           "count": 1,
           "shelfmark": "VANC",
           "location_in_branch": "Nieuw fictie 2026",
           "received_date": "2026-10-01",
-          "return_date": "2026-12-19"
+          "return_date": null
         }
       ]
     },

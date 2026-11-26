@@ -19,6 +19,7 @@
     --ink-soft: #5C523C;
     --available: #4C7A4F;
     --processing: #6E8B94;
+    --ordered: #8A6FA8;
     --card-line: #D8C6A0;
     --line-strong: #A98F5E;
   }
@@ -170,6 +171,7 @@
   .badge.loaned{ color: var(--rust); }
   .badge.reserved{ color: var(--ochre); }
   .badge.processing{ color: var(--processing); }
+  .badge.ordered{ color: var(--ordered); }
 
   .lib-name{ font-weight:600; }
   a.lib-link{ color: inherit; text-decoration: none; border-bottom: 1px solid var(--card-line); }
@@ -219,6 +221,7 @@
   .cell-loaned{ background: var(--rust); }
   .cell-reserved{ background: var(--ochre); }
   .cell-processing{ background: var(--processing); }
+  .cell-ordered{ background: var(--ordered); }
   .legend{ display:flex; gap:16px; margin-top:10px; font-size:0.78rem; color: var(--ink-soft); align-items:center; flex-wrap:wrap; }
   .legend .swatch{ display:inline-block; width:10px; height:10px; margin-right:5px; vertical-align:middle; }
 
@@ -322,6 +325,7 @@
         <span><span class="swatch cell-loaned"></span>Uitgeleend</span>
         <span><span class="swatch cell-reserved"></span>Gereserveerd, geen vrij exemplaar</span>
         <span><span class="swatch cell-processing"></span>Niet beschikbaar (in verwerking)</span>
+        <span><span class="swatch cell-ordered"></span>In bestelling</span>
       </div>
     </div></div>
   </section>
@@ -446,6 +450,7 @@ function itemState(it){
   if (it.status_code === 'loanedout') return 'loaned';
   if (it.status_code === 'hasreservation') return 'reserved';
   if (it.status_code === 'notavailable') return 'processing';
+  if (it.status_code === 'onorder') return 'ordered';
   return 'other';
 }
 
@@ -461,7 +466,8 @@ function buildBranchIndex(snapshots){
       idx[key].series.push({
         date: day, fetched_at: snap.fetched_at,
         available: b.available_copies, total: b.total_copies,
-        reserved: b.reserved_copies, onLoan: b.on_loan_copies, processing: b.processing_copies || 0
+        reserved: b.reserved_copies, onLoan: b.on_loan_copies, processing: b.processing_copies || 0,
+        ordered: b.ordered_copies || 0
       });
     }
   }
@@ -472,8 +478,8 @@ function detectEvents(snapshots){
   // Track each physical item (by item_id) across snapshots.
   //  available -> loaned            = loan
   //  loaned/reserved -> available   = return
-  // Transitions from/to 'processing' (niet beschikbaar) are not loans or
-  // returns: the copy is just being made ready for lending.
+  // Transitions from/to 'processing' (niet beschikbaar) or 'ordered' (in
+  // bestelling) are not loans or returns: the copy is just being made ready.
   const lastState = {}; // item_id -> {state}
   const events = []; // {date, type: 'loan'|'return', branch, city}
   for (const snap of snapshots){
@@ -600,7 +606,7 @@ function renderPopularity(){
   if (waiting.length){
     html += waiting
       .sort((a,b)=> a.meta.branch_name.localeCompare(b.meta.branch_name))
-      .map(s => `<tr class="muted-row"><td>–</td><td><div class="lib-name">${libLink(s.meta)}</div><div class="lib-city">${esc(s.meta.city)}</div></td><td colspan="6">Nog in verwerking, nog niet uitleenbaar</td></tr>`)
+      .map(s => `<tr class="muted-row"><td>–</td><td><div class="lib-name">${libLink(s.meta)}</div><div class="lib-city">${esc(s.meta.city)}</div></td><td colspan="6">${s.meta.items.some(i => itemState(i) === 'ordered') ? 'In bestelling, nog niet uitleenbaar' : 'Nog in verwerking, nog niet uitleenbaar'}</td></tr>`)
       .join('');
   }
   tbody.innerHTML = html;
@@ -624,12 +630,14 @@ function renderHeader(latest){
 
 function renderHero(latest){
   document.getElementById('stampFraction').textContent =
-    `${latest.network.available_copies}/${latest.network.total_copies - (latest.network.processing_copies || 0)}`;
+    `${latest.network.available_copies}/${latest.network.total_copies - (latest.network.processing_copies || 0) - (latest.network.ordered_copies || 0)}`;
   const processing = latest.network.processing_copies || 0;
-  const loanable = latest.network.total_copies - processing;
+  const ordered = latest.network.ordered_copies || 0;
+  const loanable = latest.network.total_copies - processing - ordered;
   const pct = loanable ? Math.round(100*latest.network.available_copies/loanable) : 0;
   let text = `${latest.network.available_copies} van de ${loanable} uitleenbare exemplaren van "${latest.book.title}" zijn nu te leen, verspreid over ${latest.network.branch_count} bibliotheken (${pct}% beschikbaarheid).`;
   if (processing > 0) text += ` Daarnaast ${processing === 1 ? 'is 1 exemplaar' : 'zijn ' + processing + ' exemplaren'} nog in verwerking en nog niet uitleenbaar.`;
+  if (ordered > 0) text += ` ${ordered === 1 ? '1 exemplaar is' : ordered + ' exemplaren zijn'} nog in bestelling.`;
   document.getElementById('heroSummary').textContent = text;
   document.getElementById('asOf').textContent = `Laatst gecontroleerd op ${fmtDate(latest.fetched_at)}`;
 }
@@ -643,6 +651,7 @@ function renderStatStrip(latest){
     ['Uitgeleend', onLoan],
     ['Gereserveerd', reserved],
     ['In verwerking', latest.network.processing_copies || 0],
+    ['In bestelling', latest.network.ordered_copies || 0],
     ['Gevolgde bibliotheken', latest.network.branch_count],
   ];
   const el = document.getElementById('statStrip');
@@ -652,6 +661,7 @@ function renderStatStrip(latest){
 function branchStatus(b){
   if (b.available_copies > 0) return {label:'Beschikbaar', cls:'available'};
   if ((b.processing_copies || 0) > 0 && b.on_loan_copies === 0 && b.reserved_copies === 0) return {label:'Niet beschikbaar (in verwerking)', cls:'processing'};
+  if ((b.ordered_copies || 0) > 0 && b.on_loan_copies === 0 && b.reserved_copies === 0) return {label:'In bestelling', cls:'ordered'};
   if (b.reserved_copies > 0 && b.on_loan_copies === 0) return {label:'Gereserveerd', cls:'reserved'};
   return {label:'Uitgeleend', cls:'loaned'};
 }
@@ -681,7 +691,7 @@ function renderLibraryTable(latest){
 function renderTrendChart(snapshots){
   const labels = snapshots.map(s=>fmtDateShort(s.fetched_at));
   const data = snapshots.map(s=>{
-    const loanable = s.network.total_copies - (s.network.processing_copies || 0);
+    const loanable = s.network.total_copies - (s.network.processing_copies || 0) - (s.network.ordered_copies || 0);
     return loanable ? Math.round(100*s.network.available_copies/loanable) : 0;
   });
   if (snapshots.length < 2){
@@ -775,6 +785,7 @@ function renderHeatmap(branchIndex, snapshots){
       if (s){
         if (s.available>0) cls='cell-available';
         else if (s.processing>0 && s.onLoan===0 && s.reserved===0) cls='cell-processing';
+        else if (s.ordered>0 && s.onLoan===0 && s.reserved===0) cls='cell-ordered';
         else if (s.reserved>0 && s.onLoan===0) cls='cell-reserved';
         else cls='cell-loaned';
       }
